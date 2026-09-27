@@ -28,6 +28,12 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "velora@123")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "aadarshshrivastava008@gmail.com")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
+# आपका नया Google Webhook URL (Render से 100% गारंटेड ईमेल भेजने के लिए)
+GOOGLE_MAIL_WEBHOOK = os.environ.get(
+    "MAIL_WEBHOOK_URL",
+    "https://script.google.com/macros/s/AKfycbxTbmhpLEeTK1i0Jb9X7gMGDt6-tJ_QaNnjnQo9tPNWR5TXBKUYR3Et8RsTX4S-ztUwcg/exec"
+)
+
 SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 
@@ -47,6 +53,27 @@ def send_otp_background(to_email, otp_code):
     print(f"📧 Destination: {to_email}")
     print("=" * 48 + "\n")
 
+    # 1. Google Webhook के ज़रिए सीधे ईमेल भेजना (HTTPS - Render पर 100% काम करेगा)
+    if GOOGLE_MAIL_WEBHOOK:
+        try:
+            payload = json.dumps({
+                "to": to_email,
+                "subject": f"Total Gym Security OTP: {otp_code}",
+                "body": f"Hello,\n\nYour Total Gym Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Total Gym Security"
+            }).encode("utf-8")
+            
+            req = urllib.request.Request(
+                GOOGLE_MAIL_WEBHOOK,
+                data=payload,
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=12) as response:
+                print(f"✅ OTP email successfully delivered to {to_email} via Google Webhook!")
+                return
+        except Exception as e:
+            print(f"⚠️ Webhook Email Note: {e}")
+
+    # 2. बैकअप के लिए SMTP (लोकल लैपटॉप के लिए)
     if SMTP_EMAIL and SMTP_PASSWORD:
         try:
             msg = MIMEText(f"Hello,\n\nYour Total Gym Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Total Gym Security")
@@ -56,9 +83,9 @@ def send_otp_background(to_email, otp_code):
             with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
                 server.login(SMTP_EMAIL, SMTP_PASSWORD)
                 server.send_message(msg)
-            print(f"✅ OTP email successfully delivered to {to_email}!")
+            print(f"✅ OTP email delivered via SMTP to {to_email}!")
         except Exception as e:
-            print(f"⚠️ Email Note: {e}")
+            print(f"⚠️ SMTP Note: {e}")
 
 def trigger_otp(to_email, otp_code):
     t = threading.Thread(target=send_otp_background, args=(to_email, otp_code), daemon=True)
