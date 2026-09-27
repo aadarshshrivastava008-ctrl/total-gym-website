@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Total Gym — Private Performance Club, West Hollywood</title>
+  <meta name="description" content="Total Gym is a 22,000 sq ft private performance club in West Hollywood: strength science, recovery suites, and coaching for serious athletes and professionals." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07080a;
+      --bg-2: #101218;
+      --card: #14171e;
+      --gold: #c9a66b;
+      --gold-2: #e8d5a8;
+      --text: #f4f1ea;
+      --muted: #9a9488;
+      --line: rgba(201, 166, 107, 0.28);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Outfit, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, .serif { font-family: "Cormorant Garamond", Georgia, serif; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
+
+    nav {
+      position: fixed; inset: 0 0 auto 0; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 28px;
+      background: linear-gradient(180deg, rgba(7,8,10,.94), rgba(7,8,10,.4) 70%, transparent);
+      backdrop-filter: blur(12px);
+    }
+    .logo { font-family: "Cormorant Garamond", serif; letter-spacing: .32em; font-size: 1.2rem; }
+    .nav-links {
+      display: flex; gap: 22px; font-size: .78rem; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .nav-links a:hover { color: var(--gold-2); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--gold); color: var(--gold-2);
+      padding: 12px 22px; letter-spacing: .14em; text-transform: uppercase;
+      font-size: .72rem; background: transparent; cursor: pointer;
+      transition: .25s transform, .25s background, .25s color;
+    }
+    .btn:hover { background: var(--gold); color: #111; transform: translateY(-1px); }
+    .btn-solid { background: var(--gold); color: #111; }
+
+    .hero {
+      position: relative; min-height: 100vh;
+      display: grid; place-items: end start; padding: 0 0 90px;
+      background: url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=2070') center/cover no-repeat;
+    }
+    #scene { position: absolute; inset: 0; z-index: 0; }
+    .hero-shade {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(7,8,10,.9) 0%, rgba(7,8,10,.5) 46%, rgba(7,8,10,.22) 100%),
+        linear-gradient(180deg, transparent 38%, rgba(7,8,10,.96) 100%);
+    }
+    .hero-copy { position: relative; z-index: 2; width: min(740px, calc(100% - 56px)); margin-left: 28px; }
+    .eyebrow { color: var(--gold); letter-spacing: .32em; text-transform: uppercase; font-size: .72rem; }
+    .hero h1 { font-size: clamp(3.1rem, 8vw, 6.8rem); line-height: .9; margin: 14px 0 18px; font-weight: 600; }
+    .hero p { color: var(--muted); max-width: 540px; margin-bottom: 28px; }
+
+    section { padding: 96px 0; }
+    .kicker { color: var(--gold); letter-spacing: .24em; text-transform: uppercase; font-size: .72rem; margin-bottom: 10px; }
+    h2 { font-size: clamp(2.1rem, 4vw, 3.4rem); line-height: 1.05; margin-bottom: 16px; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 40px; }
+    .stat {
+      border: 1px solid var(--line); padding: 22px;
+      background: rgba(20,23,30,.55); transform-style: preserve-3d;
+    }
+    .stat strong {
+      display: block; font-size: 1.85rem; color: var(--gold-2);
+      font-family: "Cormorant Garamond", serif;
+    }
+
+    .split { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+    .photo-frame { position: relative; overflow: hidden; min-height: 420px; }
+    .photo-frame img { width: 100%; height: 100%; object-fit: cover; min-height: 420px; }
+    .caption { margin-top: 10px; color: var(--muted); font-size: .8rem; }
+    .amenity-list { color: var(--muted); padding-left: 18px; }
+    .amenity-list li { margin: 8px 0; }
+
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line); overflow: hidden;
+      transform: perspective(900px) rotateX(0) rotateY(0);
+      transition: transform .35s ease, border-color .35s ease;
+    }
+    .card:hover { border-color: var(--gold); }
+    .card img { height: 210px; width: 100%; object-fit: cover; }
+    .card-body { padding: 22px; }
+    .card h3 { font-size: 1.7rem; margin-bottom: 8px; }
+
+    .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .tier { padding: 28px 24px; border: 1px solid var(--line); background: var(--bg-2); }
+    .tier.featured {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px rgba(201,166,107,.25);
+      transform: translateY(-8px);
+    }
+    .price { font-size: 2.6rem; font-family: "Cormorant Garamond", serif; margin: 8px 0 4px; }
+    .price span { font-size: 1rem; color: var(--muted); }
+    .tier ul { list-style: none; margin: 18px 0 24px; color: var(--muted); }
+    .tier li { padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+
+    .sched-wrap { overflow-x: auto; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; min-width: 760px; }
+    th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.08); }
+    th {
+      color: var(--gold); font-weight: 500; letter-spacing: .08em;
+      text-transform: uppercase; font-size: .72rem;
+    }
+    .trainers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .trainer { background: var(--card); border: 1px solid var(--line); }
+    .trainer img { height: 280px; width: 100%; object-fit: cover; }
+    .trainer div { padding: 14px 16px 18px; }
+    .role { color: var(--gold); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+
+    .gallery {
+      display: grid; grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 220px 220px; gap: 10px;
+    }
+    .gallery img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery .wide { grid-row: span 2; }
+
+    form { display: grid; gap: 14px; max-width: 640px; }
+    label { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    input, textarea {
+      width: 100%; background: #0c0e13; border: 1px solid var(--line);
+      color: var(--text); padding: 12px 14px; font: inherit;
+    }
+    input:focus, textarea:focus { outline: 1px solid var(--gold); }
+    .success {
+      display: none; border: 1px solid var(--gold); padding: 18px;
+      color: var(--gold-2); margin-top: 12px;
+    }
+    .success.show { display: block; }
+
+    footer { border-top: 1px solid var(--line); padding: 40px 0 28px; color: var(--muted); font-size: .9rem; }
+    .foot { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .photo-credit { margin-top: 22px; font-size: .72rem; }
+
+    .menu-btn {
+      display: none; background: none; border: 1px solid var(--line);
+      color: var(--gold-2); padding: 8px 12px; letter-spacing: .12em;
+      text-transform: uppercase; font-size: .7rem; cursor: pointer;
+    }
+
+    @media (max-width: 980px) {
+      .menu-btn { display: block; }
+      .nav-links {
+        display: none; position: absolute; top: 64px; right: 16px;
+        flex-direction: column; background: #101218; padding: 16px 20px;
+        border: 1px solid var(--line); gap: 14px;
+      }
+      .nav-links.open { display: flex; }
+      .split, .cards, .tiers, .trainers, .stats { grid-template-columns: 1fr; }
+      .gallery { grid-template-columns: 1fr 1fr; grid-template-rows: 180px 180px 180px; }
+      .gallery .wide { grid-row: auto; grid-column: span 2; }
+      .tier.featured { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="logo" href="#top">Total Gym</a>
+    <div class="nav-links" id="nav-links">
+      <a href="#club">The Club</a>
+      <a href="#training">Training</a>
+      <a href="#membership">Membership</a>
+      <a href="#schedule">Schedule</a>
+      <a href="#coaches">Coaches</a>
+      <a href="#inquire">Inquire</a>
+    </div>
+    <button class="menu-btn" type="button" id="menu-btn" aria-label="Open menu">Menu</button>
+    <a class="btn" href="#inquire">Book your tour now</a>
+  </nav>
+
+  <header class="hero" id="top">
+    <canvas id="scene"></canvas>
+    <div class="hero-shade"></div>
+    <div class="hero-copy">
+      <p class="eyebrow">Mumbai , Thane WEST · Est. 2017</p>
+      <h1 style="font-size: 42px; line-height: 1.3;">आज का अनुशासन<br />कल की सफलता।</h1>
+      <p>Total Gym is a 22,000-square-foot private performance club on Santa Monica Boulevard. Strength science, recovery suites, and coaches who program for real lives—not social media.</p>
+      <a class="btn btn-solid" href="#membership">View Memberships</a>
+    </div>
+  </header>
+
+  <section id="club">
+    <div class="wrap">
+      <p class="kicker">The house</p>
+      <h2>Built for people who train like it matters.</h2>
+      <p style="color:var(--muted);max-width:640px">Members include studio principals, touring artists, surgeons, and competitive amateurs. Capacity is capped at 780 so the floor stays open at 7 a.m. and 6 p.m. alike.</p>
+      <div class="stats">
+        <div class="stat"><strong>22,000</strong> sq ft of training &amp; recovery</div>
+        <div class="stat"><strong>18</strong> coaches on staff</div>
+        <div class="stat"><strong>42</strong> weekly coached sessions</div>
+        <div class="stat"><strong>5 a.m.–11 p.m.</strong> member hours, 365 days</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="facilities">
+    <div class="wrap split">
+      <div>
+        <p class="kicker">Facilities</p>
+        <h2>Two floors. One standard.</h2>
+        <p style="color:var(--muted);margin-bottom:18px">Level 1 is the performance hall: Eleiko competition platforms, a 40-meter sprint track, and a 25-meter resistance pool. Level 2 is recovery: infrared sauna, contrast plunge, NormaTec, and a quiet work loft overlooking the floor.</p>
+        <ul class="amenity-list">
+          <li>12 Eleiko Olympic platforms and calibrated kilo plates</li>
+          <li>Hammer Strength plate-loaded circuit and Prime selectorized line</li>
+          <li>Assault, Echo, SkiErg, and Woodway 4Front cardio bay</li>
+          <li>Turf field for sleds, med-ball work, and change-of-direction</li>
+          <li>Private assessment room: InBody 970, force plates, VALD dynamometry</li>
+          <li>Members’ locker rooms with steam, cold rinse, and recovery nutrition fridge</li>
+        </ul>
+      </div>
+      <figure class="photo-frame">
+        <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=80" alt="Strength training on the Total Gym performance floor" />
+        <figcaption class="caption">Photo: Unsplash — representative of the performance hall.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="training">
+    <div class="wrap">
+      <p class="kicker">Programming</p>
+      <h2>Classes with a purpose, not a playlist.</h2>
+      <div class="cards" style="margin-top:32px">
+        <article class="card">
+          <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80" alt="Barbell strength training" />
+          <div class="card-body">
+            <h3>Forge Strength</h3>
+            <p style="color:var(--muted)">45-minute barbell sessions. Linear periodization, weekly 1RM tracking, and a 1:8 coach ratio. Monday squat emphasis, Wednesday press, Friday pull.</p>
+          </div>
+        </article>
+        <article class="card">
+          <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=900&q=80" alt="Mobility and stretching session" />
+          <div class="card-body">
+            <h3>Length &amp; Load</h3>
+            <p style="color:var(--muted)">Mobility plus loaded stretching for hips, T-spine, and ankles. Designed as the companion to heavy lower-body days, not a standalone stretch class.</p>
+          </div>
+        </article>
+        <article class="card">
+          <img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80" alt="Conditioning class" />
+          <div class="card-body">
+            <h3>Aether Conditioning</h3>
+            <p style="color:var(--muted)">Zone 2 blocks and short glycolytic finishers. Heart-rate straps required. Saturday long piece is 50 minutes on the track and SkiErg.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="membership">
+    <div class="wrap">
+      <p class="kicker">Access</p>
+      <h2>Three memberships. One address.</h2>
+      <p style="color:var(--muted);margin-bottom:28px">Rates are billed monthly with a 12-month house agreement. Initiation is $450 (waived for referrals). Prices current as of September 2026.</p>
+      <div class="tiers">
+        <div class="tier">
+          <p class="role">Studio</p>
+          <div class="price">$189<span>/month</span></div>
+          <p style="color:var(--muted)">Open floor, group classes, and locker access.</p>
+          <ul>
+            <li>Unlimited gym floor 5 a.m.–11 p.m.</li>
+            <li>All Forge, Length &amp; Load, and Aether classes</li>
+            <li>InBody scan twice per year</li>
+            <li>Guest pass: 2 per month</li>
+          </ul>
+          <a class="btn" href="#inquire">Start Studio</a>
+        </div>
+        <div class="tier featured">
+          <p class="role">Performance</p>
+          <div class="price">$279<span>/month</span></div>
+          <p style="color:var(--muted)">The house standard for most members.</p>
+          <ul>
+            <li>Everything in Studio</li>
+            <li>2 private coaching sessions / month</li>
+            <li>Recovery suite: sauna, plunge, NormaTec</li>
+            <li>Quarterly force-plate assessment</li>
+            <li>Guest pass: 4 per month</li>
+          </ul>
+          <a class="btn btn-solid" href="#inquire">Start Performance</a>
+        </div>
+        <div class="tier">
+          <p class="role">Maison</p>
+          <div class="price">$425<span>/month</span></div>
+          <p style="color:var(--muted)">Full private-club service and programming.</p>
+          <ul>
+            <li>Everything in Performance</li>
+            <li>Weekly 1:1 with a senior coach</li>
+            <li>Concierge booking and travel programming</li>
+            <li>Priority 6 a.m. platform reservations</li>
+            <li>Partner access included (same household)</li>
+          </ul>
+          <a class="btn" href="#inquire">Start Maison</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="schedule">
+    <div class="wrap">
+      <p class="kicker">Week of 21 September 2026</p>
+      <h2>Class timetable</h2>
+      <p style="color:var(--muted);margin-bottom:20px">Book in the Total Gym app 48 hours ahead. Maison members may reserve 72 hours ahead. Cap is 16 unless noted.</p>
+      <div class="sched-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Session</th>
+              <th>Mon</th>
+              <th>Tue</th>
+              <th>Wed</th>
+              <th>Thu</th>
+              <th>Fri</th>
+              <th>Sat</th>
+              <th>Sun</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Morning</td>
+              <td>Forge Strength 6:15</td>
+              <td>Aether 6:00</td>
+              <td>Forge Strength 6:15</td>
+              <td>Length &amp; Load 6:30</td>
+              <td>Forge Strength 6:15</td>
+              <td>Aether Long 8:00</td>
+              <td>Length &amp; Load 9:00</td>
+            </tr>
+            <tr>
+              <td>Midday</td>
+              <td>Length &amp; Load 12:15</td>
+              <td>Forge Strength 12:10</td>
+              <td>Aether 12:15</td>
+              <td>Forge Strength 12:10</td>
+              <td>Length &amp; Load 12:15</td>
+              <td>Open floor</td>
+              <td>Open floor</td>
+            </tr>
+            <tr>
+              <td>Evening</td>
+              <td>Aether 18:00 · Forge 19:00</td>
+              <td>Length &amp; Load 18:15</td>
+              <td>Forge Strength 18:00</td>
+              <td>Aether 18:00 · Forge 19:15</td>
+              <td>Forge Strength 17:45</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="coaches">
+    <div class="wrap">
+      <p class="kicker">Floor staff</p>
+      <h2>Coaches you can trust with a bar.</h2>
+      <div class="trainers" style="margin-top:28px">
+        <article class="trainer">
+          <img src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=800&q=80" alt="Head of Strength Mara Ellison" />
+          <div>
+            <h3 class="serif">Mara Ellison</h3>
+            <p class="role">Head of Strength</p>
+            <p style="color:var(--muted);font-size:.9rem">CSCS, USAW L2. Former UCLA throws coach. Programs all Forge cycles.</p>
+          </div>
+        </article>
+        <article class="trainer">
+          <img src="https://images.unsplash.com/photo-1549476464-37392f717541?auto=format&fit=crop&w=800&q=80" alt="Coach Julian Park" />
+          <div>
+            <h3 class="serif">Julian Park</h3>
+            <p class="role">Performance Coach</p>
+            <p style="color:var(--muted);font-size:.9rem">MS Exercise Physiology, USC. Force-plate and return-to-play lead.</p>
+          </div>
+        </article>
+        <article class="trainer">
+          <img src="https://images.unsplash.com/photo-1518310383802-640c2f677561?auto=format&fit=crop&w=800&q=80" alt="Coach Amira Solano" />
+          <div>
+            <h3 class="serif">Amira Solano</h3>
+            <p class="role">Mobility &amp; Recovery</p>
+            <p style="color:var(--muted);font-size:.9rem">DPT, FRCms. Runs Length &amp; Load and the plunge protocol.</p>
+          </div>
+        </article>
+        <article class="trainer">
+          <img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=800&q=80" alt="Coach Theo Grant" />
+          <div>
+            <h3 class="serif">Theo Grant</h3>
+            <p class="role">Conditioning</p>
+            <p style="color:var(--muted);font-size:.9rem">Ex-pro triathlete. Owns Aether and heart-rate standards.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <p class="kicker">Inside the club</p>
+      <h2>The floor, the suite, the quiet loft.</h2>
+      <div class="gallery" style="margin-top:24px">
+        <img class="wide" src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1400&q=80" alt="Open gym with cable machines" />
+        <img src="https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=800&q=80" alt="Kettlebell training area" />
+        <img src="https://images.unsplash.com/photo-1576678927484-cc589023d76e?auto=format&fit=crop&w=800&q=80" alt="Dumbbell rack" />
+        <img src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?auto=format&fit=crop&w=800&q=80" alt="Modern gym interior" />
+        <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=800&q=80" alt="Athlete stretching" />
+      </div>
+      <p class="caption">Photography via Unsplash (Unsplash License, free commercial use). Photographer credits live on each Unsplash photo page.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <p class="kicker">Members</p>
+      <h2>What people say after six months.</h2>
+      <div class="cards" style="margin-top:28px">
+        <blockquote class="card" style="padding:24px">
+          <p>“I stopped shopping for gyms. Mara’s squat cycle added 35 pounds to my back squat without wrecking my back. The 6 p.m. floor is actually usable.”</p>
+          <p class="role" style="margin-top:14px">Elena Voss · Producer, Studio City</p>
+        </blockquote>
+        <blockquote class="card" style="padding:24px">
+          <p>“Post-op knee, Julian ran force plates every four weeks. I was back on the bike for charity rides in five months. That is the product.”</p>
+          <p class="role" style="margin-top:14px">David Cho · Orthopedic fellow</p>
+        </blockquote>
+        <blockquote class="card" style="padding:24px">
+          <p>“Maison is expensive and worth it when I travel. They send sessions to hotel gyms that don’t waste the week. Partner access meant we both stayed consistent.”</p>
+          <p class="role" style="margin-top:14px">Priya Nair · Partner, entertainment law</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <section id="inquire">
+    <div class="wrap">
+      <p class="kicker">Membership desk</p>
+      <h2>Request a tour.</h2>
+      <p style="color:var(--muted);max-width:560px;margin-bottom:24px">Tours run Tuesday–Saturday, 10:00–19:00. We’ll confirm by email within one business day. This form does not send data to a server yet; you will see an on-page confirmation.</p>
+      <form id="inquiry-form" novalidate>
+        <div>
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" autocomplete="name" required />
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div>
+          <label for="phone">Mobile Number</label>
+          <input id="phone" name="phone" type="tel" required />
+        </div>
+        <div>
+          <label for="message">Inquiry message</label>
+          <textarea id="message" name="message" rows="5" required placeholder="Tell us about your training background and preferred tour time."></textarea>
+        </div>
+        <button class="btn btn-solid" type="submit">Submit inquiry</button>
+      </form>
+      <div class="success" id="form-success" role="status">Thank you. Total Gym has received your inquiry. A membership advisor will follow up at the email you provided.</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap foot">
+      <div>
+        <p class="logo" style="color:var(--text);margin-bottom:8px">Total Gym</p>
+        <p>8847 Santa Monica Blvd<br />West Hollywood, CA 90069</p>
+        <p>Front desk: (323) 555-0148 · desk@totalgymclub.com</p>
+      </div>
+      <div>
+        <p>Member hours: 5:00 a.m.–11:00 p.m. daily</p>
+        <p>Parking: valet at the Sunset lot, validated 90 minutes</p>
+        <p>© 2026 Total Gym Athletic Club LLC</p>
+      </div>
+    </div>
+    <div class="wrap photo-credit">Images: Unsplash (free license). 3D scene: Three.js r160 via cdnjs.</div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+  <script>
+    (function () {
+      const canvas = document.getElementById("scene");
+      if (window.THREE && canvas) {
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+        camera.position.set(0, 0.2, 6.2);
+
+        const light = new THREE.DirectionalLight(0xe8d5a8, 1.4);
+        light.position.set(2, 3, 4);
+        scene.add(light, new THREE.AmbientLight(0x445566, 0.6));
+
+        const rings = new THREE.Group();
+
+        // --- 1. दोनों 3D इक्विपमेंट्स को चमकाने वाली ब्राइट स्टूडियो लाइट्स ---
+        const frontSpot = new THREE.DirectionalLight(0xffffff, 5.5);
+        frontSpot.position.set(3.0, 4.0, 7.0);
+        scene.add(frontSpot);
+
+        const goldRim = new THREE.PointLight(0xffb703, 10.0, 30);
+        goldRim.position.set(2.0, 1.0, -2.5);
+        scene.add(goldRim);
+
+        const blueAccent = new THREE.PointLight(0x00f0ff, 6.0, 25);
+        blueAccent.position.set(-3.0, -2.0, 4.0);
+        scene.add(blueAccent);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
+        scene.add(ambientLight);
+
+        // --- 2. अंतरिक्ष में तैरते हुए चमकते गोल्डन स्पार्क्स ---
+        const particleGeo = new THREE.BufferGeometry();
+        const pCount = 100;
+        const pPositions = new Float32Array(pCount * 3);
+        for (let i = 0; i < pCount * 3; i += 3) {
+            pPositions[i] = (Math.random() - 0.1) * 7 + 1.0;
+            pPositions[i + 1] = (Math.random() - 0.5) * 6;
+            pPositions[i + 2] = (Math.random() - 0.5) * 5;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+        const particleMat = new THREE.PointsMaterial({
+            size: 0.045,
+            color: 0xffd000,
+            transparent: true,
+            opacity: 0.85
+        });
+        const embers = new THREE.Points(particleGeo, particleMat);
+        rings.add(embers);
+
+        // --- 3. दोनों 3D मॉडल्स (Dumbbell + Plate) को लोड करना ---
+        let plateMesh = null;
+        let dumbbellMesh = null;
+
+        function loadGymEquipments() {
+            const loader = new THREE.GLTFLoader();
+
+            // (A) असली 3D प्लेट लोड करना
+            loader.load('plate.glb', function(gltf) {
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 2.8 / (maxDim || 1);
+
+                model.scale.setScalar(scale);
+                model.position.sub(center.multiplyScalar(scale));
+                
+                // नीचे दाएँ हिस्से पर सेट करना
+                model.position.x += 2.0;
+                model.position.y -= 0.7;
+                model.position.z -= 0.4;
+                model.rotation.set(0.8, -0.4, 0.3);
+
+                model.traverse(function(child) {
+                    if (child.isMesh && child.material) {
+                        child.material.metalness = 0.85;
+                        child.material.roughness = 0.25;
+                    }
+                });
+
+                plateMesh = model;
+                rings.add(model);
+                console.log("3D Plate loaded!");
+            }, undefined, function(e) { console.error(e); });
+
+            // (B) असली 3D डम्बल लोड करना
+            loader.load('dumbbell.glb', function(gltf) {
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 2.4 / (maxDim || 1);
+
+                model.scale.setScalar(scale);
+                model.position.sub(center.multiplyScalar(scale));
+                
+                // ऊपर दाएँ हिस्से पर सेट करना
+                model.position.x += 1.1;
+                model.position.y += 0.8;
+                model.position.z += 0.3;
+                model.rotation.set(0.4, 0.7, 0.5);
+
+                model.traverse(function(child) {
+                    if (child.isMesh && child.material) {
+                        child.material.metalness = 0.85;
+                        child.material.roughness = 0.22;
+                    }
+                });
+
+                dumbbellMesh = model;
+                rings.add(model);
+                console.log("3D Dumbbell loaded!");
+            }, undefined, function(e) { console.error(e); });
+        }
+
+        // GLTF लोडर स्क्रिप्ट लगाना
+        if (typeof THREE.GLTFLoader === 'undefined') {
+            const gltfScript = document.createElement('script');
+            gltfScript.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+            gltfScript.onload = loadGymEquipments;
+            document.head.appendChild(gltfScript);
+        } else {
+            loadGymEquipments();
+        }
+
+        scene.add(rings);
+        const particles = new THREE.BufferGeometry();
+        const count = 500;
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 14;
+        particles.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        scene.add(new THREE.Points(particles, new THREE.PointsMaterial({ color: 0xc9a66b, size: 0.018 })));
+
+        let mx = 0, my = 0;
+        window.addEventListener("pointermove", (e) => {
+          mx = (e.clientX / window.innerWidth - 0.5) * 0.6;
+          my = (e.clientY / window.innerHeight - 0.5) * 0.4;
+        });
+
+        function resize() {
+          const w = canvas.clientWidth || window.innerWidth;
+          const h = canvas.clientHeight || window.innerHeight;
+          renderer.setSize(w, h, false);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        }
+        window.addEventListener("resize", resize);
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        resize();
+
+        function tick() {
+          rings.rotation.y += 0.003 + mx * 0.01;
+          rings.rotation.x += 0.001 + my * 0.008;
+          camera.position.x += (mx * 0.8 - camera.position.x) * 0.04;
+          camera.position.y += (-my * 0.5 - camera.position.y + 0.2) * 0.04;
+          camera.lookAt(0, 0, 0);
+          renderer.render(scene, camera);
+          requestAnimationFrame(tick);
+        }
+        tick();
+      }
+
+      document.querySelectorAll(".card, .tier, .stat").forEach((el) => {
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width - 0.5;
+          const y = (e.clientY - r.top) / r.height - 0.5;
+          el.style.transform = "perspective(900px) rotateY(" + (x * 10) + "deg) rotateX(" + (-y * 8) + "deg)";
+        });
+        el.addEventListener("pointerleave", () => {
+          el.style.transform = "perspective(900px) rotateY(0) rotateX(0)";
+        });
+      });
+
+      const form = document.getElementById("inquiry-form");
+      const success = document.getElementById("form-success");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
+
+        const submitBtn = form.querySelector("button[type='submit']");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        const payload = {
+          name: document.getElementById("name").value.trim(),
+          phone: document.getElementById("phone").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          message: document.getElementById("message").value.trim()
+        };
+
+        try {
+          const res = await fetch("/api/inquire", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await res.json();
+
+          if (res.ok && data.success) {
+            success.textContent = "Thank you. Total Gym has received your inquiry. A membership advisor will follow up shortly.";
+            success.classList.add("show");
+            form.reset();
+          } else {
+            alert(data.message || "Submission failed. Please try again.");
+          }
+        } catch (err) {
+          alert("Connection error: Ensure the backend server is running.");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit inquiry";
+        }
+      }); 
+      const menuBtn = document.getElementById("menu-btn");
+      const navLinks = document.getElementById("nav-links");
+      menuBtn.addEventListener("click", () => navLinks.classList.toggle("open"));
+      navLinks.querySelectorAll("a").forEach((a) => {
+        a.addEventListener("click", () => navLinks.classList.remove("open"));
+      });
+    })();
+  </script>
+  <!-- ========================================== -->
+  <!-- TOTAL GYM AI CHATBOT COMPONENT -->
+  <!-- ========================================== -->
+  <style>
+    /* चैट टॉगल बटन */
+    /* चैटबॉट इंडिकेटर की स्टाइल */
+    .chatbot-hint {
+        position: fixed;
+        bottom: 38px;               /* बटन के बिल्कुल सेंटर में रखने के लिए */
+        right: 98px;                /* बटन से 10px की दूरी पर बाईं (left) तरफ */
+        background: rgba(20, 20, 22, 0.95);
+        color: #ffffff;
+        border: 1px solid #e5a93c;  /* आपकी वेबसाइट का मैचिंग गोल्ड कलर */
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(229, 169, 60, 0.25);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        user-select: none;
+        pointer-events: none;       /* ताकि इस पर क्लिक करने पर कोई रुकावट न हो */
+    }
+
+    .point-hand {
+        display: inline-block;
+        animation: point-move 1.5s infinite;
+    }
+
+    @keyframes point-move {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(4px); }
+    }
+    #rudra-chat-btn {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e5a93c, #b37d1a);
+        color: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(229, 169, 60, 0.4);
+        z-index: 99999;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        border: none;
+    }
+    #rudra-chat-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 12px 30px rgba(229, 169, 60, 0.6);
+    }
+
+    /* चैट विंडो */
+    #rudra-chat-window {
+        position: fixed;
+        bottom: 100px;
+        right: 28px;
+        width: 360px;
+        height: 500px;
+        background: #111115;
+        border: 1px solid #282830;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85);
+        z-index: 99999;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: translateY(20px) scale(0.95);
+        opacity: 0;
+        pointer-events: none;
+    }
+    #rudra-chat-window.active {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* चैट हेडर */
+    .chat-header {
+        background: #18181f;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #26262e;
+    }
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .chat-status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #2ecc71;
+        box-shadow: 0 0 8px #2ecc71;
+    }
+    .chat-title {
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+    .chat-subtitle {
+        color: #e5a93c;
+        font-size: 11px;
+    }
+    .chat-close-btn {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 18px;
+        cursor: pointer;
+    }
+    .chat-close-btn:hover { color: #fff; }
+
+    /* मैसेज एरिया */
+    .chat-messages {
+        flex: 1;
+        padding: 18px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        font-size: 13px;
+    }
+    .chat-msg {
+        max-width: 82%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+    .msg-bot {
+        align-self: flex-start;
+        background: #1c1c24;
+        color: #e0e0e5;
+        border: 1px solid #2a2a35;
+        border-bottom-left-radius: 2px;
+    }
+    .msg-user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #e5a93c, #c98e25);
+        color: #0b0b0d;
+        font-weight: 600;
+        border-bottom-right-radius: 2px;
+    }
+
+    /* इनपुट एरिया */
+    .chat-input-bar {
+        padding: 14px;
+        background: #16161c;
+        border-top: 1px solid #24242d;
+        display: flex;
+        gap: 8px;
+    }
+    .chat-input-bar input {
+        flex: 1;
+        background: #0d0d10;
+        border: 1px solid #2a2a35;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #fff;
+        font-size: 13px;
+        outline: none;
+    }
+    .chat-input-bar input:focus { border-color: #e5a93c; }
+    .chat-send-btn {
+        background: #e5a93c;
+        border: none;
+        border-radius: 8px;
+        padding: 0 16px;
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .chat-send-btn:hover { background: #f5b94c; }
+  </style>
+
+  <!-- चैटबॉट बटन और विंडो -->
+  <div class="chatbot-hint">Chatbot <span class="point-hand">👉🏻</span></div>
+  <button id="rudra-chat-btn" aria-label="Open Chat">💬</button>
+
+  <div id="rudra-chat-window">
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <span class="chat-status-dot"></span>
+            <div>
+                <div class="chat-title">TOTAL GYM AI</div>
+                <div class="chat-subtitle">Online • Assistant</div>
+            </div>
+        </div>
+        <button class="chat-close-btn" id="rudra-chat-close">✕</button>
+    </div>
+    <div class="chat-messages" id="rudra-chat-msgs">
+        <div class="chat-msg msg-bot">
+            नमस्ते! I am Total Gym's AI Assistant. How can I help you today with our memberships, training programs, or timings?
+        </div>
+    </div>
+    <form class="chat-input-bar" id="rudra-chat-form">
+        <input type="text" id="rudra-chat-input" placeholder="Type your question..." autocomplete="off" required>
+        <button type="submit" class="chat-send-btn">➤</button>
+    </form>
+  </div>
+
+  <script>
+  (function() {
+    const btn = document.getElementById('rudra-chat-btn');
+    const win = document.getElementById('rudra-chat-window');
+    const closeBtn = document.getElementById('rudra-chat-close');
+    const form = document.getElementById('rudra-chat-form');
+    const input = document.getElementById('rudra-chat-input');
+    const msgs = document.getElementById('rudra-chat-msgs');
+
+    if (!btn || !win) return;
+
+    btn.addEventListener('click', () => {
+        win.classList.toggle('active');
+        if (win.classList.contains('active')) input.focus();
+    });
+
+    closeBtn.addEventListener('click', () => win.classList.remove('active'));
+
+    function appendMessage(text, isUser) {
+        const div = document.createElement('div');
+        div.className = `chat-msg ${isUser ? 'msg-user' : 'msg-bot'}`;
+        div.innerText = text;
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage(text, true);
+        input.value = '';
+
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'chat-msg msg-bot';
+        loadingDiv.innerText = 'Typing...';
+        msgs.appendChild(loadingDiv);
+        msgs.scrollTop = msgs.scrollHeight;
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+            loadingDiv.remove();
+            appendMessage(data.reply || "Sorry, I couldn't process that.", false);
+        } catch (err) {
+            loadingDiv.remove();
+            appendMessage("नेटवर्क समस्या। कृपया पुनः प्रयास करें।", false);
+        }
+    });
+  })();
+  </script>
+</body>
+</html>
