@@ -77,13 +77,15 @@ def init_db():
             created_at TEXT
         )
     ''')
-    # पुराने डेटाबेस में 'phone' कॉलम अपने आप जोड़ना (ताकि पुराना डेटा कभी न मिटे)
     cursor.execute("PRAGMA table_info(inquiries)")
     cols = [c[1] for c in cursor.fetchall()]
     if "phone" not in cols:
         cursor.execute("ALTER TABLE inquiries ADD COLUMN phone TEXT")
     conn.commit()
     conn.close()
+
+# सर्वर शुरू होते ही डेटाबेस और टेबल तुरंत तैयार करना
+init_db()
 
 @app.route("/")
 def home():
@@ -155,7 +157,7 @@ def chat():
 
     return jsonify({"reply": reply})
 
-# फ़ॉर्म सबमिशन API (Phone Number के साथ)
+# फ़ॉर्म सबमिशन API
 @app.route("/api/inquire", methods=["POST"])
 def inquire():
     data = request.get_json(silent=True) or request.form
@@ -175,7 +177,7 @@ def inquire():
     conn.commit()
     conn.close()
 
-    return jsonify({"status": "success", "message": "Thank you! Your tour inquiry has been received."}), 201
+    return jsonify({"success": True, "status": "success", "message": "Thank you! Your tour inquiry has been received."}), 201
 
 LOGIN_HTML = """
 <!DOCTYPE html>
@@ -260,7 +262,7 @@ OTP_HTML = """
 </html>
 """
 
-# व्यवस्थित एडमिन डैशबोर्ड (PHONE कॉलम के साथ)
+# व्यवस्थित एडमिन डैशबोर्ड
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
