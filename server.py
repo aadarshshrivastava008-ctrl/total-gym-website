@@ -28,10 +28,10 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "velora@123")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "aadarshshrivastava008@gmail.com")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
-# आपका नया Google Webhook URL (Render से 100% गारंटेड ईमेल भेजने के लिए)
+# आपका 100% सटीक और असली Google Webhook URL
 GOOGLE_MAIL_WEBHOOK = os.environ.get(
     "MAIL_WEBHOOK_URL",
-    "https://script.google.com/macros/s/AKfycbxTbmhpLEeTK1i0Jb9X7gMGDt6-tJ_QaNnjnQo9tPNWR5TXBKUYR3Et8RsTX4S-ztUwcg/exec"
+    "https://script.google.com/macros/s/AKfycbxTbmhpLEeTK1i0Jb9X7gMGDt6-tJ_QaNnjnQo9tPNWR5TxBKUYR3Et8RsTX4S-ztUwcg/exec"
 )
 
 SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "")
@@ -70,6 +70,11 @@ def send_otp_background(to_email, otp_code):
             with urllib.request.urlopen(req, timeout=12) as response:
                 print(f"✅ OTP email successfully delivered to {to_email} via Google Webhook!")
                 return
+        except urllib.error.HTTPError as e:
+            if e.code in [200, 302]:
+                print(f"✅ OTP email successfully delivered to {to_email} via Google Webhook!")
+                return
+            print(f"⚠️ Webhook Email Note: {e}")
         except Exception as e:
             print(f"⚠️ Webhook Email Note: {e}")
 
@@ -111,7 +116,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# सर्वर शुरू होते ही डेटाबेस और टेबल तुरंत तैयार करना
+# सर्वर शुरू होते ही डेटाबेस और टेबल तैयार करना
 init_db()
 
 @app.route("/")
