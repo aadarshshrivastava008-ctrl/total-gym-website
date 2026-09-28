@@ -12,7 +12,7 @@ import urllib.error
 from email.mime.text import MIMEText
 
 app = Flask(__name__)
-app.secret_key = "velora_ultra_secure_gym_secret_key_2026"
+app.secret_key = "cuts_and_shape_fitness_gym_secret_2026"
 
 # .env फ़ाइल से क्रेडेंशियल्स लोड करना
 if os.path.exists(".env"):
@@ -28,7 +28,7 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "velora@123")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "aadarshshrivastava008@gmail.com")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
-# आपका 100% सटीक और असली Google Webhook URL
+# आपका 100% सही और टेस्टेड Google Webhook URL
 GOOGLE_MAIL_WEBHOOK = os.environ.get(
     "MAIL_WEBHOOK_URL",
     "https://script.google.com/macros/s/AKfycbxTbmhpLEeTK1i0Jb9X7gMGDt6-tJ_QaNnjnQo9tPNWR5TxBKUYR3Et8RsTX4S-ztUwcg/exec"
@@ -49,17 +49,17 @@ def mask_email(email):
 
 def send_otp_background(to_email, otp_code):
     print("\n" + "=" * 48)
-    print(f"🔑 [Total Gym 2FA] Your OTP code is: {otp_code}")
+    print(f"🔑 [Cuts & Shape 2FA] Your OTP code is: {otp_code}")
     print(f"📧 Destination: {to_email}")
     print("=" * 48 + "\n")
 
-    # 1. Google Webhook के ज़रिए सीधे ईमेल भेजना (HTTPS - Render पर 100% काम करेगा)
+    # 1. Google Webhook के ज़रिए सीधे ईमेल भेजना
     if GOOGLE_MAIL_WEBHOOK:
         try:
             payload = json.dumps({
                 "to": to_email,
-                "subject": f"Total Gym Security OTP: {otp_code}",
-                "body": f"Hello,\n\nYour Total Gym Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Total Gym Security"
+                "subject": f"Cuts & Shape Security OTP: {otp_code}",
+                "body": f"Hello,\n\nYour Cuts & Shape Fitness Gym Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Cuts & Shape Fitness Gym Security"
             }).encode("utf-8")
             
             req = urllib.request.Request(
@@ -78,11 +78,11 @@ def send_otp_background(to_email, otp_code):
         except Exception as e:
             print(f"⚠️ Webhook Email Note: {e}")
 
-    # 2. बैकअप के लिए SMTP (लोकल लैपटॉप के लिए)
+    # 2. बैकअप के लिए SMTP
     if SMTP_EMAIL and SMTP_PASSWORD:
         try:
-            msg = MIMEText(f"Hello,\n\nYour Total Gym Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Total Gym Security")
-            msg["Subject"] = f"Total Gym Security OTP: {otp_code}"
+            msg = MIMEText(f"Hello,\n\nYour Cuts & Shape Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Cuts & Shape Security")
+            msg["Subject"] = f"Cuts & Shape Security OTP: {otp_code}"
             msg["From"] = SMTP_EMAIL
             msg["To"] = to_email
             with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
@@ -116,7 +116,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# सर्वर शुरू होते ही डेटाबेस और टेबल तैयार करना
 init_db()
 
 @app.route("/")
@@ -124,7 +123,7 @@ def home():
     if os.path.exists("index.html"):
         with open("index.html", "r", encoding="utf-8") as f:
             return f.read()
-    return "Total Gym Website Home"
+    return "Cuts & Shape Fitness Gym Website Home"
 
 @app.route("/<path:filename>")
 def serve_file(filename):
@@ -139,7 +138,7 @@ def chat():
     if not user_msg:
         return jsonify({"reply": "Please ask a question."}), 400
 
-    system_instructions = "You are Total Gym Assistant. Be helpful and polite. Keep words like Fees, Timing, Membership in English."
+    system_instructions = "You are Cuts & Shape Fitness Gym Assistant. Be helpful and polite. Keep words like Fees, Timing, Membership in English."
     if os.path.exists("instructions.txt"):
         with open("instructions.txt", "r", encoding="utf-8") as f:
             system_instructions = f.read()
@@ -177,15 +176,15 @@ def chat():
 
     lower = user_msg.lower()
     if any(k in lower for k in ["timing", "time", "open", "समय"]):
-        reply = "Total Gym का Timing:\n• Monday to Saturday: 6:00 AM – 10:00 PM\n• Sunday: 8:00 AM – 6:00 PM\nFacility Tours: Tuesday to Saturday (10:00 AM – 7:00 PM)"
+        reply = "Cuts & Shape Fitness Gym का Timing:\n• Monday to Saturday: Morning 6:00 AM – 10:30 AM | Evening 4:30 PM – 10:00 PM\n• Sunday: Morning 7:00 AM – 11:00 AM (Evening Closed)\nFacility Tours: Morning 7:00 AM – 10:00 AM & Evening 5:00 PM – 8:00 PM"
     elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "कीमत"]):
-        reply = "हमारे Membership Plans हैं:\n1. Studio: ₹4,999/month\n2. Performance: ₹7,999/month\n3. Elite Private: ₹11,999/month\n\nAap website par 'Book your tour now' button se free tour book kar sakte hain!"
+        reply = "हमारे Membership Plans हैं:\n1. Monthly General: ₹1,499/month\n2. Quarterly Pro: ₹3,499 (3 Months)\n3. Yearly Elite: ₹9,999 (Full Year)\n\nAap website par 'Book your tour now' button se free gym tour book kar sakte hain!"
     elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha"]):
-        reply = "Total Gym Ghodbunder Road, Thane West, Mumbai mein located hai."
+        reply = "Cuts & Shape Fitness Gym Ravindra Nagar, Behind PK School, Allahabad Road, Rewa-486001, Madhya Pradesh mein located hai."
     elif any(k in lower for k in ["program", "class", "training", "workout"]):
-        reply = "हमारे 3 Core Training Programs हैं:\n1. Forge Strength (Barbell strength & progressive overload)\n2. Length & Load (Mobility & loaded stretching)\n3. Aether Conditioning (Zone-2 cardio & endurance)"
+        reply = "हमारे Core Programs हैं:\n1. Hypertrophy & Strength (Muscle building & compound lifting)\n2. Fat Loss & Conditioning (High-intensity fat burning & cardio)\n3. Personal Transformation Coaching (1:1 trainer guidance & custom diet)"
     else:
-        reply = "Namaste! Total Gym mein aapka welcome hai. Main aapki kya help kar sakta hoon? Aap mujhse Timing, Fees, Membership Plans ya Training Programs ke baare mein pooch sakte hain."
+        reply = "Namaste! Cuts & Shape Fitness Gym, Rewa mein aapka welcome hai. Main aapki kya help kar sakta hoon? Aap mujhse Timing, Fees, Membership Plans ya Location ke baare mein pooch sakte hain."
 
     return jsonify({"reply": reply})
 
@@ -209,17 +208,17 @@ def inquire():
     conn.commit()
     conn.close()
 
-    return jsonify({"success": True, "status": "success", "message": "Thank you! Your tour inquiry has been received."}), 201
+    return jsonify({"success": True, "status": "success", "message": "Thank you! Cuts & Shape Fitness Gym has received your tour inquiry."}), 201
 
 LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Total Gym - Admin Login</title>
+    <title>Cuts & Shape Fitness Gym - Admin Login</title>
     <style>
         body { background-color: #0b0b0b; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .login-card { background: #141416; padding: 40px; border-radius: 12px; border: 1px solid #2a2a2e; width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
-        h2 { color: #e5a93c; text-align: center; margin-top: 0; font-size: 24px; letter-spacing: 1px; }
+        h2 { color: #e5a93c; text-align: center; margin-top: 0; font-size: 22px; letter-spacing: 1px; }
         .sub { text-align: center; color: #777; font-size: 13px; margin-bottom: 20px; }
         .error { background: #4a1515; color: #ff8b8b; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; margin-bottom: 15px; }
         label { display: block; font-size: 13px; color: #a0a0a0; margin-bottom: 6px; }
@@ -233,7 +232,7 @@ LOGIN_HTML = """
 </head>
 <body>
     <div class="login-card">
-        <h2>TOTAL GYM ADMIN</h2>
+        <h2>CUTS & SHAPE ADMIN</h2>
         <div class="sub">Step 1: Security Credentials</div>
         {% if error %}<div class="error">{{ error }}</div>{% endif %}
         <form method="POST" action="/admin/login">
@@ -243,7 +242,7 @@ LOGIN_HTML = """
             <input type="password" name="password" required>
             <button type="submit">Continue to 2FA →</button>
         </form>
-        <a href="/" class="back-link">← Back to Total Gym Website</a>
+        <a href="/" class="back-link">← Back to Cuts & Shape Website</a>
     </div>
 </body>
 </html>
@@ -253,7 +252,7 @@ OTP_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Total Gym - 2-Factor Authentication</title>
+    <title>Cuts & Shape Fitness Gym - 2-Factor Authentication</title>
     <style>
         body { background-color: #0b0b0b; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .otp-card { background: #141416; padding: 40px; border-radius: 12px; border: 1px solid #2a2a2e; width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); text-align: center; }
@@ -299,7 +298,7 @@ DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Inquiry Submissions (Admin)</title>
+    <title>Inquiry Submissions (Cuts & Shape Admin)</title>
     <style>
         body { background-color: #0d0d0f; color: #e5e5e5; font-family: 'Segoe UI', sans-serif; padding: 30px 40px; margin: 0; }
         .container { max-width: 1380px; margin: 0 auto; }
@@ -330,8 +329,8 @@ DASHBOARD_HTML = """
     <div class="container">
         <div class="header">
             <div>
-                <a href="/" class="back-link">← Back to Total Gym Website</a>
-                <h1>Inquiry Submissions (Admin)</h1>
+                <a href="/" class="back-link">← Back to Cuts & Shape Website</a>
+                <h1>Inquiry Submissions (Cuts & Shape Admin)</h1>
             </div>
             <div>
                 <span class="badge">🛡️ 2FA Verified Session</span>
@@ -447,6 +446,6 @@ def admin_logout():
 
 if __name__ == "__main__":
     init_db()
-    print("Total Gym Server running on http://127.0.0.1:8080")
+    print("Cuts & Shape Fitness Gym Server running on http://127.0.0.1:8080")
     print("Admin view protected with 2FA at http://127.0.0.1:8080/admin")
     app.run(host="127.0.0.1", port=8080, debug=True, threaded=True)
