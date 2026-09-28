@@ -11,6 +11,12 @@ import urllib.request
 import urllib.error
 from email.mime.text import MIMEText
 
+# क्लाउड डेटाबेस (PostgreSQL) सपोर्ट
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+
 app = Flask(__name__)
 app.secret_key = "avengers_fitness_club_secret_key_2026"
 
@@ -38,7 +44,16 @@ SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 
 DB_FILE = "inquiries.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+
+def get_db_connection():
+    if DATABASE_URL and psycopg2:
+        return psycopg2.connect(DATABASE_URL)
+    return sqlite3.connect(DB_FILE)
 
 def mask_email(email):
     if "@" in email:
@@ -97,24 +112,40 @@ def trigger_otp(to_email, otp_code):
     t.start()
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS inquiries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT,
-            phone TEXT,
-            message TEXT,
-            created_at TEXT
-        )
-    ''')
-    cursor.execute("PRAGMA table_info(inquiries)")
-    cols = [c[1] for c in cursor.fetchall()]
-    if "phone" not in cols:
-        cursor.execute("ALTER TABLE inquiries ADD COLUMN phone TEXT")
-    conn.commit()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        if DATABASE_URL and psycopg2:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS inquiries (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT,
+                    email TEXT,
+                    phone TEXT,
+                    message TEXT,
+                    created_at TEXT
+                )
+            ''')
+        else:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS inquiries (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    email TEXT,
+                    phone TEXT,
+                    message TEXT,
+                    created_at TEXT
+                )
+            ''')
+            cursor.execute("PRAGMA table_info(inquiries)")
+            cols = [c[1] for c in cursor.fetchall()]
+            if "phone" not in cols:
+                cursor.execute("ALTER TABLE inquiries ADD COLUMN phone TEXT")
+        conn.commit()
+        conn.close()
+        print("✅ Database successfully connected and initialized!")
+    except Exception as e:
+        print(f"⚠️ Database initialization note: {e}")
 
 init_db()
 
@@ -201,16 +232,20 @@ def inquire():
 
     now_ist = datetime.datetime.now(IST).strftime("%Y-%m-%d %I:%M:%S %p")
 
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO inquiries (name, email, phone, message, created_at)
-        VALUES (?, ?, ?, ?, ?)
-    """, (name, email, phone, message, now_ist))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"success": True, "status": "success", "message": "Thank you! Avengers Fitness Club has received your tour inquiry."}), 201
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        placeholder = "%s" if (DATABASE_URL and psycopg2) else "?"
+        cursor.execute(f"""
+            INSERT INTO inquiries (name, email, phone, message, created_at)
+            VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+        """, (name, email, phone, message, now_ist))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "status": "success", "message": "Thank you! Avengers Fitness Club has received your tour inquiry."}), 201
+    except Exception as e:
+        print(f"⚠️ Inquiry DB Error: {e}")
+        return jsonify({"success": False, "message": "Database error"}), 500
 
 LOGIN_HTML = """
 <!DOCTYPE html>
@@ -378,11 +413,15 @@ DASHBOARD_HTML = """
 @app.route("/admin")
 def admin_portal():
     if session.get("logged_in"):
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, phone, email, message, created_at FROM inquiries ORDER BY id DESC")
-        rows = cursor.fetchall()
-        conn.close()
+        rows = []
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, name, phone, email, message, created_at FROM inquiries ORDER BY id DESC")
+            rows = cursor.fetchall()
+            conn.close()
+        except Exception as e:
+            print(f"⚠️ Admin fetch DB error: {e}")
         return render_template_string(DASHBOARD_HTML, rows=rows)
     
     if session.get("pending_2fa"):
