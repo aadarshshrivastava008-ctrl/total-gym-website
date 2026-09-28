@@ -49,7 +49,7 @@ def mask_email(email):
 
 def send_otp_background(to_email, otp_code):
     print("\n" + "=" * 48)
-    print(f"🔑 [The Avengers Fitness Club 2FA] Your OTP code is: {otp_code}")
+    print(f"🔑 [Avengers Fitness Club 2FA] Your OTP code is: {otp_code}")
     print(f"📧 Destination: {to_email}")
     print("=" * 48 + "\n")
 
@@ -58,8 +58,8 @@ def send_otp_background(to_email, otp_code):
         try:
             payload = json.dumps({
                 "to": to_email,
-                "subject": f"The Avengers Fitness Club Security OTP: {otp_code}",
-                "body": f"Hello,\n\nYour The Avengers Fitness Club Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- The Avengers Fitness Club Security"
+                "subject": f"Avengers Fitness Club Security OTP: {otp_code}",
+                "body": f"Hello,\n\nYour Avengers Fitness Club Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Avengers Fitness Club Security"
             }).encode("utf-8")
             
             req = urllib.request.Request(
@@ -81,8 +81,8 @@ def send_otp_background(to_email, otp_code):
     # 2. बैकअप के लिए SMTP
     if SMTP_EMAIL and SMTP_PASSWORD:
         try:
-            msg = MIMEText(f"Hello,\n\nYour The Avengers Fitness Club Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- The Avengers Fitness Club Security")
-            msg["Subject"] = f"The Avengers Fitness Club Security OTP: {otp_code}"
+            msg = MIMEText(f"Hello,\n\nYour Avengers Fitness Club Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Avengers Fitness Club Security")
+            msg["Subject"] = f"Avengers Fitness Club Security OTP: {otp_code}"
             msg["From"] = SMTP_EMAIL
             msg["To"] = to_email
             with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
@@ -123,7 +123,7 @@ def home():
     if os.path.exists("index.html"):
         with open("index.html", "r", encoding="utf-8") as f:
             return f.read()
-    return "The Avengers Fitness Club Website Home"
+    return "Avengers Fitness Club Website Home"
 
 @app.route("/<path:filename>")
 def serve_file(filename):
@@ -138,7 +138,7 @@ def chat():
     if not user_msg:
         return jsonify({"reply": "Please ask a question."}), 400
 
-    system_instructions = "You are The Avengers Fitness Club Assistant. Be helpful and polite. Keep words like Fees, Timing, Membership in English."
+    system_instructions = "You are Avengers Fitness Club Assistant. Be helpful and polite. Keep words like Fees, Timing, Membership in English."
     if os.path.exists("instructions.txt"):
         with open("instructions.txt", "r", encoding="utf-8") as f:
             system_instructions = f.read()
@@ -175,16 +175,18 @@ def chat():
             print(f"Chatbot API Note: {e}")
 
     lower = user_msg.lower()
-    if any(k in lower for k in ["timing", "time", "open", "समय"]):
-        reply = "The Avengers Fitness Club का Timing:\n• Monday to Saturday: 6:00 AM – 10:00 PM\n• Sunday: 8:00 AM – 6:00 PM\nFacility Tours: Tuesday to Saturday (10:00 AM – 7:00 PM)"
-    elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "कीमत"]):
-        reply = "हमारे Membership Plans हैं:\n1. Studio: ₹1,999/month\n2. Performance: ₹3,999/month\n3. Elite Club: ₹6,999/month\n\nAap website par 'Book your tour now' button se free tour book kar sakte hain!"
-    elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha"]):
-        reply = "The Avengers Fitness Club Ghodbunder Road, Thane West, Mumbai mein located hai."
-    elif any(k in lower for k in ["program", "class", "training", "workout"]):
-        reply = "हमारे 3 Core Training Programs हैं:\n1. Forge Strength (Barbell strength & progressive overload)\n2. Length & Load (Mobility & loaded stretching)\n3. Aether Conditioning (Zone-2 cardio & endurance)"
+    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे"]):
+        reply = "Avengers Fitness Club का Timing:\n• Monday to Saturday: 5:30 AM – 10:45 PM\n• Sunday: 7:00 AM – 2:00 PM\nFacility Tours: Morning 7:00 AM – 11:00 AM & Evening 5:00 PM – 9:00 PM"
+    elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "कीमत", "पैसा"]):
+        reply = "हमारे Membership Plans हैं:\n1. Annual Promo Offer: ₹11,999/year (Best Value! Includes Being Strong machines, CrossFit, Steam Bath & Diet Plan)\n2. Gold Annual + PT: ₹15,999/year (Includes 1 Month Personal Training)\n3. Short-Term Monthly: ₹2,499/month\n\nAap website par 'Book your tour now' button se free gym tour book kar sakte hain!"
+    elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha", "landmark"]):
+        reply = "Avengers Fitness Club का Address:\nShop No. 2, Bhukendra Bus Stop, Pokharan Road No. 1, Near Yeoor Hills Road / Yeoor Gate, Upvan, Thane West, Maharashtra - 400606.\nPhone / WhatsApp: +91 86556 69966, +91 86554 49988"
+    elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "amenities", "steam"]):
+        reply = "हमारे पास 5,500 sq ft का बड़ा स्पेस है, जिसमें:\n• Being Strong branded biomechanical equipment\n• Dedicated CrossFit & Functional training zone\n• Steam Bath & Shower facilities\n• Zumba, Yoga & Kickboxing group classes\n• 4.7★ Rating by 1,300+ members in Thane West!"
+    elif any(k in lower for k in ["phone", "contact", "whatsapp", "call", "नंबर"]):
+        reply = "Aap humein call ya WhatsApp kar sakte hain:\n📞 +91 86556 69966\n📞 +91 86554 49988\nAddress: Pokharan Road No. 1, Upvan, Thane West."
     else:
-        reply = "Namaste! The Avengers Fitness Club mein aapka welcome hai. Main aapki kya help kar sakta hoon? Aap mujhse Timing, Fees, Membership Plans ya Training Programs ke baare mein pooch sakte hain."
+        reply = "Namaste! Avengers Fitness Club, Thane West mein aapka welcome hai. Main aapki kya help kar sakta hoon? Aap mujhse Timing, Fees, Being Strong Equipment, Steam Bath ya Location ke baare mein pooch sakte hain."
 
     return jsonify({"reply": reply})
 
@@ -208,17 +210,17 @@ def inquire():
     conn.commit()
     conn.close()
 
-    return jsonify({"success": True, "status": "success", "message": "Thank you! The Avengers Fitness Club has received your tour inquiry."}), 201
+    return jsonify({"success": True, "status": "success", "message": "Thank you! Avengers Fitness Club has received your tour inquiry."}), 201
 
 LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>The Avengers Fitness Club - Admin Login</title>
+    <title>Avengers Fitness Club - Admin Login</title>
     <style>
         body { background-color: #0b0b0b; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .login-card { background: #141416; padding: 40px; border-radius: 12px; border: 1px solid #2a2a2e; width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
-        h2 { color: #e5a93c; text-align: center; margin-top: 0; font-size: 19px; letter-spacing: 0.8px; }
+        h2 { color: #e5a93c; text-align: center; margin-top: 0; font-size: 20px; letter-spacing: 0.8px; }
         .sub { text-align: center; color: #777; font-size: 13px; margin-bottom: 20px; }
         .error { background: #4a1515; color: #ff8b8b; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; margin-bottom: 15px; }
         label { display: block; font-size: 13px; color: #a0a0a0; margin-bottom: 6px; }
@@ -232,7 +234,7 @@ LOGIN_HTML = """
 </head>
 <body>
     <div class="login-card">
-        <h2>THE AVENGERS FITNESS CLUB</h2>
+        <h2>AVENGERS FITNESS CLUB</h2>
         <div class="sub">Step 1: Security Credentials</div>
         {% if error %}<div class="error">{{ error }}</div>{% endif %}
         <form method="POST" action="/admin/login">
@@ -242,7 +244,7 @@ LOGIN_HTML = """
             <input type="password" name="password" required>
             <button type="submit">Continue to 2FA →</button>
         </form>
-        <a href="/" class="back-link">← Back to The Avengers Fitness Club Website</a>
+        <a href="/" class="back-link">← Back to Avengers Fitness Club</a>
     </div>
 </body>
 </html>
@@ -252,7 +254,7 @@ OTP_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>The Avengers Fitness Club - 2-Factor Authentication</title>
+    <title>Avengers Fitness Club - 2-Factor Authentication</title>
     <style>
         body { background-color: #0b0b0b; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .otp-card { background: #141416; padding: 40px; border-radius: 12px; border: 1px solid #2a2a2e; width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); text-align: center; }
@@ -298,7 +300,7 @@ DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Inquiry Submissions (The Avengers Fitness Club Admin)</title>
+    <title>Inquiry Submissions (Avengers Fitness Club Admin)</title>
     <style>
         body { background-color: #0d0d0f; color: #e5e5e5; font-family: 'Segoe UI', sans-serif; padding: 30px 40px; margin: 0; }
         .container { max-width: 1380px; margin: 0 auto; }
@@ -329,8 +331,8 @@ DASHBOARD_HTML = """
     <div class="container">
         <div class="header">
             <div>
-                <a href="/" class="back-link">← Back to The Avengers Fitness Club Website</a>
-                <h1>Inquiry Submissions (The Avengers Fitness Club Admin)</h1>
+                <a href="/" class="back-link">← Back to Avengers Fitness Club Website</a>
+                <h1>Inquiry Submissions (Avengers Fitness Club Admin)</h1>
             </div>
             <div>
                 <span class="badge">🛡️ 2FA Verified Session</span>
@@ -446,6 +448,6 @@ def admin_logout():
 
 if __name__ == "__main__":
     init_db()
-    print("The Avengers Fitness Club Server running on http://127.0.0.1:8080")
+    print("Avengers Fitness Club Server running on http://127.0.0.1:8080")
     print("Admin view protected with 2FA at http://127.0.0.1:8080/admin")
     app.run(host="127.0.0.1", port=8080, debug=True, threaded=True)
