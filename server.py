@@ -36,6 +36,10 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "aadarshshrivastava008@gmail.com")
 # Groq / Llama 3 API Key (100% Free)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
 
+# जिम का UPI ID (बाद में Render Environment में GYM_UPI_ID से 1 सेकंड में बदला जा सकता है)
+GYM_UPI_ID = os.environ.get("GYM_UPI_ID", "avengersfitness@upi")
+GYM_NAME = os.environ.get("GYM_NAME", "Avengers Fitness Club")
+
 GOOGLE_MAIL_WEBHOOK = os.environ.get(
     "MAIL_WEBHOOK_URL",
     "https://script.google.com/macros/s/AKfycbxTbmhpLEeTK1i0Jb9X7gMGDt6-tJ_QaNnjnQo9tPNWR5TxBKUYR3Et8RsTX4S-ztUwcg/exec"
@@ -93,19 +97,6 @@ def send_otp_background(to_email, otp_code):
         except Exception as e:
             print(f"⚠️ Webhook Email Note: {e}")
 
-    if SMTP_EMAIL and SMTP_PASSWORD:
-        try:
-            msg = MIMEText(f"Hello,\n\nYour Avengers Fitness Club Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Avengers Fitness Club Security")
-            msg["Subject"] = f"Avengers Fitness Club Security OTP: {otp_code}"
-            msg["From"] = SMTP_EMAIL
-            msg["To"] = to_email
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
-                server.login(SMTP_EMAIL, SMTP_PASSWORD)
-                server.send_message(msg)
-            print(f"✅ OTP email delivered via SMTP to {to_email}!")
-        except Exception as e:
-            print(f"⚠️ SMTP Note: {e}")
-
 def trigger_otp(to_email, otp_code):
     t = threading.Thread(target=send_otp_background, args=(to_email, otp_code), daemon=True)
     t.start()
@@ -115,6 +106,7 @@ def init_db():
         conn = get_db_connection()
         cursor = conn.cursor()
         if DATABASE_URL and psycopg2:
+            # 1. इन्क्वायरी टेबल
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS inquiries (
                     id SERIAL PRIMARY KEY,
@@ -122,6 +114,20 @@ def init_db():
                     email TEXT,
                     phone TEXT,
                     message TEXT,
+                    created_at TEXT
+                )
+            ''')
+            # 2. ऑनलाइन पेमेंट्स (UTR) टेबल
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS payments (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT,
+                    phone TEXT,
+                    email TEXT,
+                    plan_name TEXT,
+                    amount TEXT,
+                    utr_no TEXT,
+                    status TEXT,
                     created_at TEXT
                 )
             ''')
@@ -140,9 +146,23 @@ def init_db():
             cols = [c[1] for c in cursor.fetchall()]
             if "phone" not in cols:
                 cursor.execute("ALTER TABLE inquiries ADD COLUMN phone TEXT")
+
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS payments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    phone TEXT,
+                    email TEXT,
+                    plan_name TEXT,
+                    amount TEXT,
+                    utr_no TEXT,
+                    status TEXT,
+                    created_at TEXT
+                )
+            ''')
         conn.commit()
         conn.close()
-        print("✅ Database successfully connected and initialized!")
+        print("✅ Database tables successfully connected and initialized!")
     except Exception as e:
         print(f"⚠️ Database initialization note: {e}")
 
@@ -204,24 +224,23 @@ def chat():
         except Exception as e:
             print(f"Groq Chatbot API Note: {e}")
 
-    # बैकअप (Fallback) जवाब:
     lower = user_msg.lower()
     if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे"]):
         reply = "Avengers Fitness Club का Timing:\n• Monday to Saturday: 5:30 AM – 10:45 PM\n• Sunday: 7:00 AM – 2:00 PM\nFacility Tours: Morning 7:00 AM – 11:00 AM & Evening 5:00 PM – 9:00 PM"
     elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "कीमत", "पैसा"]):
-        reply = "हमारे Membership Plans हैं:\n1. Annual Promo Offer: ₹11,999/year (Best Value! Includes Being Strong machines, CrossFit, Steam Bath & Diet Plan)\n2. Gold Annual + PT: ₹15,999/year (Includes 1 Month Personal Training)\n3. Short-Term Monthly: ₹2,499/month\n\nAap website par 'Book your tour now' button se free gym tour book kar sakte hain!"
+        reply = "हमारे Membership Plans हैं:\n1. Annual Promo Offer: ₹11,999/year (Best Value! Includes Being Strong machines, CrossFit, Steam Bath & Diet Plan)\n2. Gold Annual + PT: ₹15,999/year (Includes 1 Month Personal Training)\n3. Short-Term Monthly: ₹2,499/month\n\nAap website par 'Join via UPI' button se direct online pay kar sakte hain!"
     elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha", "landmark"]):
         reply = "Avengers Fitness Club का Address:\nShop No. 2, Bhukendra Bus Stop, Pokharan Road No. 1, Near Yeoor Hills Road / Yeoor Gate, Upvan, Thane West, Maharashtra - 400606.\nPhone / WhatsApp: +91 86556 69966, +91 86554 49988"
     elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "amenities", "steam"]):
-        reply = "हमारे पास 5,500 sq ft का बड़ा स्पेस है, जिसमें:\n• Being Strong branded biomechanical equipment\n• Dedicated CrossFit & Functional training zone\n• Steam Bath & Shower facilities\n• Zumba, Yoga & Kickboxing group classes\n• 4.7★ Rating by 1,300+ members in Thane West!"
+        reply = "हमारे पास 5,500 sq ft का बड़ा स्पेस है, जिसमें Being Strong equipment, CrossFit, Steam Bath & Zumba facilities available hain!"
     elif any(k in lower for k in ["phone", "contact", "whatsapp", "call", "नंबर"]):
-        reply = "Aap humein call ya WhatsApp kar sakte hain:\n📞 +91 86556 69966\n📞 +91 86554 49988\nAddress: Pokharan Road No. 1, Upvan, Thane West."
+        reply = "Aap humein call ya WhatsApp kar sakte hain:\n📞 +91 86556 69966\n📞 +91 86554 49988"
     else:
-        reply = "Namaste! Avengers Fitness Club, Thane West mein aapka welcome hai. Main aapki kya help kar sakta hoon? Aap mujhse Timing, Fees, Being Strong Equipment, Steam Bath ya Location ke baare mein pooch sakte hain."
+        reply = "Namaste! Avengers Fitness Club mein aapka welcome hai. Main aapki kya help kar sakta hoon?"
 
     return jsonify({"reply": reply})
 
-# फ़ॉर्म सबमिशन API
+# सामान्य फ़ॉर्म सबमिशन API
 @app.route("/api/inquire", methods=["POST"])
 def inquire():
     data = request.get_json(silent=True) or request.form
@@ -245,6 +264,37 @@ def inquire():
         return jsonify({"success": True, "status": "success", "message": "Thank you! Avengers Fitness Club has received your tour inquiry."}), 201
     except Exception as e:
         print(f"⚠️ Inquiry DB Error: {e}")
+        return jsonify({"success": False, "message": "Database error"}), 500
+
+# ऑनलाइन UPI पेमेंट (UTR) सबमिशन API
+@app.route("/api/pay-upi", methods=["POST"])
+def pay_upi():
+    data = request.get_json(silent=True) or request.form
+    name = data.get("name", "").strip()
+    phone = data.get("phone", "").strip()
+    email = data.get("email", "").strip()
+    plan_name = data.get("plan_name", "Gym Membership").strip()
+    amount = data.get("amount", "0").strip()
+    utr_no = data.get("utr_no", "").strip()
+
+    if not utr_no or len(utr_no) < 6:
+        return jsonify({"success": False, "message": "Please enter a valid 12-digit UTR/UPI Reference Number."}), 400
+
+    now_ist = datetime.datetime.now(IST).strftime("%Y-%m-%d %I:%M:%S %p")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        placeholder = "%s" if (DATABASE_URL and psycopg2) else "?"
+        cursor.execute(f"""
+            INSERT INTO payments (name, phone, email, plan_name, amount, utr_no, status, created_at)
+            VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+        """, (name, phone, email, plan_name, amount, utr_no, "Pending Verification", now_ist))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "status": "success", "message": "Payment recorded successfully! Your membership will be activated after UTR verification."}), 201
+    except Exception as e:
+        print(f"⚠️ Pay-UPI DB Error: {e}")
         return jsonify({"success": False, "message": "Database error"}), 500
 
 LOGIN_HTML = """
@@ -330,15 +380,15 @@ OTP_HTML = """
 </html>
 """
 
-# व्यवस्थित एडमिन डैशबोर्ड
+# व्यवस्थित एडमिन डैशबोर्ड (Inquiries + UPI Payments)
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Inquiry Submissions (Avengers Fitness Club Admin)</title>
+    <title>Avengers Fitness Club - Admin Portal</title>
     <style>
         body { background-color: #0d0d0f; color: #e5e5e5; font-family: 'Segoe UI', sans-serif; padding: 30px 40px; margin: 0; }
-        .container { max-width: 1380px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #202025; }
         .header a.back-link { color: #e5a93c; text-decoration: none; font-size: 13px; margin-bottom: 6px; display: inline-block; }
         .header a.back-link:hover { text-decoration: underline; }
@@ -347,19 +397,16 @@ DASHBOARD_HTML = """
         .btn-logout:hover { background: #5a2020; color: #fff; }
         .badge { background: #231c11; color: #e5a93c; border: 1px solid #4a3818; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-right: 15px; }
         
-        .table-card { background: #131316; border-radius: 10px; overflow: hidden; border: 1px solid #25252b; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: auto; }
-        th { background: #1a1a20; color: #e5a93c; padding: 16px 18px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #2a2a32; }
-        td { padding: 16px 18px; border-bottom: 1px solid #1c1c22; font-size: 14px; vertical-align: middle; }
+        .section-title { color: #e5a93c; font-size: 18px; font-weight: bold; margin: 30px 0 15px 0; display: flex; align-items: center; gap: 10px; }
+        .table-card { background: #131316; border-radius: 10px; overflow: hidden; border: 1px solid #25252b; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #1a1a20; color: #e5a93c; padding: 14px 18px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #2a2a32; }
+        td { padding: 14px 18px; border-bottom: 1px solid #1c1c22; font-size: 14px; vertical-align: middle; }
         tr:hover { background: #17171d; }
         
-        .col-id { color: #888; font-weight: bold; width: 50px; }
-        .col-name { color: #ffffff; font-weight: 600; width: 180px; }
-        .col-phone { color: #e5a93c; font-weight: 600; width: 160px; white-space: nowrap; }
-        .col-email a { color: #6495ed; text-decoration: none; }
-        .col-email a:hover { text-decoration: underline; }
-        .col-msg { color: #d0d0d0; line-height: 1.5; }
-        .col-time { color: #888; font-size: 13px; white-space: nowrap; width: 190px; }
+        .badge-status { background: #3d2c0d; color: #f5b94c; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #7a5410; }
+        .utr-code { font-family: monospace; font-size: 15px; color: #5ce1e6; font-weight: bold; letter-spacing: 1px; }
+        .amount-tag { color: #75e08a; font-weight: bold; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -367,14 +414,53 @@ DASHBOARD_HTML = """
         <div class="header">
             <div>
                 <a href="/" class="back-link">← Back to Avengers Fitness Club Website</a>
-                <h1>Inquiry Submissions (Avengers Fitness Club Admin)</h1>
+                <h1>Avengers Fitness Club Management Portal</h1>
             </div>
             <div>
-                <span class="badge">🛡️ 2FA Verified Session</span>
+                <span class="badge">🛡️ 2FA Verified</span>
                 <a href="/admin/logout" class="btn-logout">Logout</a>
             </div>
         </div>
 
+        <!-- 1. ऑनलाइन UPI पेमेंट्स टेबल -->
+        <div class="section-title">💳 Online UPI Payments & Memberships (UTR Submissions)</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NAME</th>
+                        <th>PHONE</th>
+                        <th>PLAN</th>
+                        <th>AMOUNT</th>
+                        <th>UTR NUMBER</th>
+                        <th>STATUS</th>
+                        <th>SUBMITTED AT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p_id, p_name, p_phone, p_email, p_plan, p_amount, p_utr, p_status, p_time in payments %}
+                    <tr>
+                        <td>#{{ p_id }}</td>
+                        <td style="font-weight: bold; color: #fff;">{{ p_name }}</td>
+                        <td style="color: #e5a93c;">{{ p_phone }}</td>
+                        <td>{{ p_plan }}</td>
+                        <td class="amount-tag">₹{{ p_amount }}</td>
+                        <td class="utr-code">{{ p_utr }}</td>
+                        <td><span class="badge-status">{{ p_status }}</span></td>
+                        <td style="color: #888;">{{ p_time }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #666; padding: 30px;">No online payments submitted yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2. सामान्य इन्क्वायरी टेबल -->
+        <div class="section-title">📩 General Tour & Membership Inquiries</div>
         <div class="table-card">
             <table>
                 <thead>
@@ -388,18 +474,18 @@ DASHBOARD_HTML = """
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item_id, item_name, item_phone, item_email, item_msg, item_time in rows %}
+                    {% for item_id, item_name, item_phone, item_email, item_msg, item_time in inquiries %}
                     <tr>
-                        <td class="col-id">#{{ item_id }}</td>
-                        <td class="col-name">{{ item_name }}</td>
-                        <td class="col-phone">{{ item_phone or '—' }}</td>
-                        <td class="col-email"><a href="mailto:{{ item_email }}">{{ item_email }}</a></td>
-                        <td class="col-msg">{{ item_msg }}</td>
-                        <td class="col-time">{{ item_time }}</td>
+                        <td>#{{ item_id }}</td>
+                        <td style="font-weight: bold; color: #fff;">{{ item_name }}</td>
+                        <td style="color: #e5a93c;">{{ item_phone or '—' }}</td>
+                        <td><a href="mailto:{{ item_email }}" style="color: #6495ed; text-decoration: none;">{{ item_email }}</a></td>
+                        <td>{{ item_msg }}</td>
+                        <td style="color: #888;">{{ item_time }}</td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #666; padding: 40px;">No inquiries found yet.</td>
+                        <td colspan="6" style="text-align: center; color: #666; padding: 30px;">No inquiries found yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -413,16 +499,20 @@ DASHBOARD_HTML = """
 @app.route("/admin")
 def admin_portal():
     if session.get("logged_in"):
-        rows = []
+        inquiries_rows = []
+        payments_rows = []
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT id, name, phone, email, message, created_at FROM inquiries ORDER BY id DESC")
-            rows = cursor.fetchall()
+            inquiries_rows = cursor.fetchall()
+
+            cursor.execute("SELECT id, name, phone, email, plan_name, amount, utr_no, status, created_at FROM payments ORDER BY id DESC")
+            payments_rows = cursor.fetchall()
             conn.close()
         except Exception as e:
             print(f"⚠️ Admin fetch DB error: {e}")
-        return render_template_string(DASHBOARD_HTML, rows=rows)
+        return render_template_string(DASHBOARD_HTML, inquiries=inquiries_rows, payments=payments_rows)
     
     if session.get("pending_2fa"):
         return render_template_string(OTP_HTML, masked_email=mask_email(ADMIN_EMAIL))
