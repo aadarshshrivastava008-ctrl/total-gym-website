@@ -93,9 +93,22 @@ def send_otp_background(to_email, otp_code):
             if e.code in [200, 302]:
                 print(f"✅ OTP email successfully delivered to {to_email} via Google Webhook!")
                 return
-            print(f"⚠️ Webhook Email Note: {e}")
+            print(f"⚠️️ Webhook Email Note: {e}")
         except Exception as e:
             print(f"⚠️ Webhook Email Note: {e}")
+
+    if SMTP_EMAIL and SMTP_PASSWORD:
+        try:
+            msg = MIMEText(f"Hello,\n\nYour Avengers Fitness Club Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Avengers Fitness Club Security")
+            msg["Subject"] = f"Avengers Fitness Club Security OTP: {otp_code}"
+            msg["From"] = SMTP_EMAIL
+            msg["To"] = to_email
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+                server.login(SMTP_EMAIL, SMTP_PASSWORD)
+                server.send_message(msg)
+            print(f"✅ OTP email delivered via SMTP to {to_email}!")
+        except Exception as e:
+            print(f"⚠️ SMTP Note: {e}")
 
 def trigger_otp(to_email, otp_code):
     t = threading.Thread(target=send_otp_background, args=(to_email, otp_code), daemon=True)
@@ -106,7 +119,6 @@ def init_db():
         conn = get_db_connection()
         cursor = conn.cursor()
         if DATABASE_URL and psycopg2:
-            # 1. इन्क्वायरी टेबल
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS inquiries (
                     id SERIAL PRIMARY KEY,
@@ -117,7 +129,6 @@ def init_db():
                     created_at TEXT
                 )
             ''')
-            # 2. ऑनलाइन पेमेंट्स (UTR) टेबल
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS payments (
                     id SERIAL PRIMARY KEY,
@@ -228,7 +239,7 @@ def chat():
     if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे"]):
         reply = "Avengers Fitness Club का Timing:\n• Monday to Saturday: 5:30 AM – 10:45 PM\n• Sunday: 7:00 AM – 2:00 PM\nFacility Tours: Morning 7:00 AM – 11:00 AM & Evening 5:00 PM – 9:00 PM"
     elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "कीमत", "पैसा"]):
-        reply = "हमारे Membership Plans हैं:\n1. Annual Promo Offer: ₹11,999/year (Best Value! Includes Being Strong machines, CrossFit, Steam Bath & Diet Plan)\n2. Gold Annual + PT: ₹15,999/year (Includes 1 Month Personal Training)\n3. Short-Term Monthly: ₹2,499/month\n\nAap website par 'Join via UPI' button se direct online pay kar sakte hain!"
+        reply = "हमारे Membership Plans हैं:\n1. Annual Promo Offer: ₹11,999/year (Best Value! Includes Being Strong machines, CrossFit, Steam Bath & Diet Plan)\n2. Gold Annual + PT: ₹15,999/year (Includes 1 Month Personal Training)\n3. Short-Term Monthly: ₹2,499/month\n\nAap website par 'Pay via UPI' button se direct online pay kar sakte hain!"
     elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha", "landmark"]):
         reply = "Avengers Fitness Club का Address:\nShop No. 2, Bhukendra Bus Stop, Pokharan Road No. 1, Near Yeoor Hills Road / Yeoor Gate, Upvan, Thane West, Maharashtra - 400606.\nPhone / WhatsApp: +91 86556 69966, +91 86554 49988"
     elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "amenities", "steam"]):
@@ -417,7 +428,7 @@ DASHBOARD_HTML = """
                 <h1>Avengers Fitness Club Management Portal</h1>
             </div>
             <div>
-                <span class="badge">🛡️ 2FA Verified</span>
+                <span class="badge">🛡️️ 2FA Verified</span>
                 <a href="/admin/logout" class="btn-logout">Logout</a>
             </div>
         </div>
