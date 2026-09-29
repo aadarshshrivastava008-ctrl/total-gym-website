@@ -283,8 +283,7 @@
             <li>Shower &amp; locker room facility</li>
             <li>General trainer floor guidance</li>
           </ul>
-          <a class="btn" href="#inquire">Start Monthly</a>
-        </div>
+          <a class="btn" href="javascript:void(0)" onclick="openUpiModal('Short-Term Monthly', 2499)">Pay via UPI (₹2,499)</a>        </div>
         <div class="tier featured">
           <p class="role">Annual Special Deal</p>
           <div class="price">₹11,999<span>/year</span></div>
@@ -296,7 +295,7 @@
             <li>Complimentary gym bag &amp; BMI scan</li>
             <li>Personalized basic diet consultation</li>
           </ul>
-          <a class="btn btn-solid" href="#inquire">Claim Offer</a>
+          <a class="btn btn-solid" href="javascript:void(0)" onclick="openUpiModal('Annual Special Deal', 11999)">Pay via UPI (₹11,999)</a>
         </div>
         <div class="tier">
           <p class="role">Gold Annual + PT</p>
@@ -309,7 +308,7 @@
             <li>Priority steam bath &amp; locker access</li>
             <li>Zumba &amp; group class priority</li>
           </ul>
-          <a class="btn" href="#inquire">Start Gold</a>
+          <a class="btn" href="javascript:void(0)" onclick="openUpiModal('Gold Annual + PT', 15999)">Pay via UPI (₹15,999)</a>          <a class="btn" href="#inquire">Start Gold</a>
         </div>
       </div>
     </div>
@@ -933,5 +932,139 @@
     });
   })();
   </script>
+  <!-- ================= UPI PAYMENT MODAL (AVENGERS FITNESS CLUB) ================= -->
+<div id="upiPaymentModal" style="display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); justify-content: center; align-items: center;">
+  <div style="background: #141417; border: 1px solid #e5a93c; border-radius: 14px; width: 90%; max-width: 440px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); color: #fff; position: relative; max-height: 90vh; overflow-y: auto; font-family: 'Segoe UI', sans-serif;">
+      
+      <!-- Close Button -->
+      <span onclick="closeUpiModal()" style="position: absolute; right: 18px; top: 14px; font-size: 26px; cursor: pointer; color: #888;">&times;</span>
+      
+      <h3 style="color: #e5a93c; margin: 0 0 4px 0; font-size: 20px; text-align: center; letter-spacing: 0.5px;">⚡ Join Avengers Fitness Club</h3>
+      <p id="modalPlanDetails" style="text-align: center; color: #aaa; font-size: 14px; margin-bottom: 18px;">Selected Plan: <b style="color: #fff;">Annual Promo - ₹11,999</b></p>
+
+      <!-- QR Code Box -->
+      <div style="background: #fff; padding: 12px; border-radius: 10px; width: 180px; margin: 0 auto 14px auto; text-align: center;">
+          <img id="upiQrImage" src="" alt="Scan to Pay via UPI" style="width: 180px; height: 180px; display: block;">
+      </div>
+      <p style="text-align: center; font-size: 12px; color: #777; margin: 0 0 12px 0;">Scan with GPay, PhonePe, Paytm or BHIM</p>
+
+      <!-- Mobile UPI Direct Button -->
+      <div style="text-align: center; margin-bottom: 15px;">
+          <a id="upiDeepLinkBtn" href="#" style="display: inline-block; width: 100%; box-sizing: border-box; background: #25252d; border: 1px solid #444; color: #5ce1e6; text-decoration: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; font-size: 13px;">📱 Open in Google Pay / PhonePe (Mobile Only)</a>
+      </div>
+
+      <div style="background: #1c1c22; padding: 10px 14px; border-radius: 6px; font-size: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #888;">UPI ID: <b id="displayUpiId" style="color: #e5a93c;">avengersfitness@upi</b></span>
+          <button onclick="copyUpiId()" style="background: #333; border: none; color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">Copy</button>
+      </div>
+
+      <!-- UTR Submission Form -->
+      <form id="upiSubmissionForm" onsubmit="submitUpiPayment(event)">
+          <input type="hidden" id="upiFormPlanName" value="Annual Promo Offer">
+          <input type="hidden" id="upiFormAmount" value="11999">
+
+          <label style="display: block; font-size: 12px; color: #a0a0a0; margin-bottom: 4px;">Full Name *</label>
+          <input type="text" id="upiCustName" required placeholder="Your Name" style="width: 100%; padding: 10px; margin-bottom: 12px; background: #202024; border: 1px solid #333; border-radius: 6px; color: #fff; box-sizing: border-box; outline: none;">
+
+          <label style="display: block; font-size: 12px; color: #a0a0a0; margin-bottom: 4px;">WhatsApp Phone Number *</label>
+          <input type="tel" id="upiCustPhone" required placeholder="10-digit mobile number" style="width: 100%; padding: 10px; margin-bottom: 12px; background: #202024; border: 1px solid #333; border-radius: 6px; color: #fff; box-sizing: border-box; outline: none;">
+
+          <label style="display: block; font-size: 12px; color: #a0a0a0; margin-bottom: 4px;">12-digit UTR / UPI Reference No. *</label>
+          <input type="text" id="upiCustUtr" required maxlength="16" placeholder="e.g. 427189032185" style="width: 100%; padding: 12px; margin-bottom: 6px; background: #202024; border: 1px solid #e5a93c; border-radius: 6px; color: #e5a93c; font-weight: bold; font-size: 15px; text-align: center; letter-spacing: 2px; box-sizing: border-box; outline: none;">
+          <p style="font-size: 11px; color: #777; margin: 0 0 16px 0; text-align: center;">(Check payment receipt in GPay / PhonePe for 12-digit UTR)</p>
+
+          <button type="submit" id="upiSubmitBtn" style="width: 100%; padding: 13px; background: #e5a93c; border: none; border-radius: 6px; font-weight: bold; color: #000; font-size: 15px; cursor: pointer;">Confirm & Submit Payment Details</button>
+          <p id="upiResponseMsg" style="display: none; text-align: center; margin-top: 12px; font-size: 13px; padding: 10px; border-radius: 6px;"></p>
+      </form>
+  </div>
+</div>
+
+<script>
+const DEFAULT_UPI_ID = "avengersfitness@upi";
+const GYM_PAY_NAME = "Avengers Fitness Club";
+
+function openUpiModal(planName, amount) {
+  document.getElementById("upiFormPlanName").value = planName;
+  document.getElementById("upiFormAmount").value = amount;
+  document.getElementById("modalPlanDetails").innerHTML = `Selected Plan: <b style="color: #e5a93c;">${planName} - ₹${amount}</b>`;
+  document.getElementById("displayUpiId").innerText = DEFAULT_UPI_ID;
+
+  // Generate UPI URI
+  const upiUri = `upi://pay?pa=${encodeURIComponent(DEFAULT_UPI_ID)}&pn=${encodeURIComponent(GYM_PAY_NAME)}&am=${amount}&cu=INR`;
+  
+  // Set Dynamic QR Code image
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+  document.getElementById("upiQrImage").src = qrUrl;
+
+  // Set Mobile Deep Link
+  document.getElementById("upiDeepLinkBtn").href = upiUri;
+
+  // Reset Form
+  document.getElementById("upiSubmissionForm").reset();
+  document.getElementById("upiResponseMsg").style.display = "none";
+  document.getElementById("upiSubmitBtn").disabled = false;
+  document.getElementById("upiSubmitBtn").innerText = "Confirm & Submit Payment Details";
+
+  document.getElementById("upiPaymentModal").style.display = "flex";
+}
+
+function closeUpiModal() {
+  document.getElementById("upiPaymentModal").style.display = "none";
+}
+
+function copyUpiId() {
+  navigator.clipboard.writeText(DEFAULT_UPI_ID);
+  alert("UPI ID Copied: " + DEFAULT_UPI_ID);
+}
+
+function submitUpiPayment(e) {
+  e.preventDefault();
+  const btn = document.getElementById("upiSubmitBtn");
+  const msg = document.getElementById("upiResponseMsg");
+
+  btn.disabled = true;
+  btn.innerText = "Submitting Details...";
+
+  const payload = {
+      name: document.getElementById("upiCustName").value.trim(),
+      phone: document.getElementById("upiCustPhone").value.trim(),
+      plan_name: document.getElementById("upiFormPlanName").value,
+      amount: document.getElementById("upiFormAmount").value,
+      utr_no: document.getElementById("upiCustUtr").value.trim()
+  };
+
+  fetch("/api/pay-upi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+      if (data.success) {
+          msg.style.display = "block";
+          msg.style.background = "#15381d";
+          msg.style.color = "#75e08a";
+          msg.innerHTML = "🎉 <b>Payment Submitted!</b><br>Our team will verify the UTR and activate your membership shortly.";
+          btn.style.display = "none";
+          setTimeout(closeUpiModal, 4000);
+      } else {
+          msg.style.display = "block";
+          msg.style.background = "#4a1515";
+          msg.style.color = "#ff8b8b";
+          msg.innerText = data.message || "Failed to submit. Please try again.";
+          btn.disabled = false;
+          btn.innerText = "Confirm & Submit Payment Details";
+      }
+  })
+  .catch(err => {
+      msg.style.display = "block";
+      msg.style.background = "#4a1515";
+      msg.style.color = "#ff8b8b";
+      msg.innerText = "Network error. Please try again.";
+      btn.disabled = false;
+      btn.innerText = "Confirm & Submit Payment Details";
+  });
+}
+</script>
 </body>
 </html>
