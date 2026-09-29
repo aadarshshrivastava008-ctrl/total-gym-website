@@ -93,7 +93,7 @@ def send_otp_background(to_email, otp_code):
             if e.code in [200, 302]:
                 print(f"✅ OTP email successfully delivered to {to_email} via Google Webhook!")
                 return
-            print(f"⚠️️ Webhook Email Note: {e}")
+            print(f"⚠️ Webhook Email Note: {e}")
         except Exception as e:
             print(f"⚠️ Webhook Email Note: {e}")
 
@@ -308,6 +308,22 @@ def pay_upi():
         print(f"⚠️ Pay-UPI DB Error: {e}")
         return jsonify({"success": False, "message": "Database error"}), 500
 
+# एडमिन द्वारा पेमेंट वेरिफाई करने का नया रूट
+@app.route("/admin/verify-payment/<int:payment_id>", methods=["POST"])
+def verify_payment(payment_id):
+    if not session.get("logged_in"):
+        return redirect("/admin")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        placeholder = "%s" if (DATABASE_URL and psycopg2) else "?"
+        cursor.execute(f"UPDATE payments SET status = 'Verified / Paid' WHERE id = {placeholder}", (payment_id,))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"⚠️ Verify Payment DB Error: {e}")
+    return redirect("/admin")
+
 LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
@@ -391,7 +407,7 @@ OTP_HTML = """
 </html>
 """
 
-# व्यवस्थित एडमिन डैशबोर्ड (Inquiries + UPI Payments)
+# व्यवस्थित एडमिन डैशबोर्ड (Inquiries + UPI Payments with Verify Action)
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
@@ -415,7 +431,10 @@ DASHBOARD_HTML = """
         td { padding: 14px 18px; border-bottom: 1px solid #1c1c22; font-size: 14px; vertical-align: middle; }
         tr:hover { background: #17171d; }
         
-        .badge-status { background: #3d2c0d; color: #f5b94c; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #7a5410; }
+        .badge-status { background: #3d2c0d; color: #f5b94c; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #7a5410; display: inline-block; }
+        .badge-verified { background: #15381d; color: #75e08a; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #236330; display: inline-block; }
+        .btn-verify { background: #1b5e20; color: #fff; border: 1px solid #2e7d32; padding: 6px 14px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-left: 8px; vertical-align: middle; }
+        .btn-verify:hover { background: #2e7d32; }
         .utr-code { font-family: monospace; font-size: 15px; color: #5ce1e6; font-weight: bold; letter-spacing: 1px; }
         .amount-tag { color: #75e08a; font-weight: bold; font-size: 15px; }
     </style>
@@ -428,7 +447,7 @@ DASHBOARD_HTML = """
                 <h1>Avengers Fitness Club Management Portal</h1>
             </div>
             <div>
-                <span class="badge">🛡️️ 2FA Verified</span>
+                <span class="badge">🛡️ 2FA Verified</span>
                 <a href="/admin/logout" class="btn-logout">Logout</a>
             </div>
         </div>
@@ -445,7 +464,7 @@ DASHBOARD_HTML = """
                         <th>PLAN</th>
                         <th>AMOUNT</th>
                         <th>UTR NUMBER</th>
-                        <th>STATUS</th>
+                        <th>STATUS / ACTION</th>
                         <th>SUBMITTED AT</th>
                     </tr>
                 </thead>
@@ -458,7 +477,16 @@ DASHBOARD_HTML = """
                         <td>{{ p_plan }}</td>
                         <td class="amount-tag">₹{{ p_amount }}</td>
                         <td class="utr-code">{{ p_utr }}</td>
-                        <td><span class="badge-status">{{ p_status }}</span></td>
+                        <td>
+                            {% if p_status == 'Verified / Paid' %}
+                                <span class="badge-verified">🟢 Verified / Paid</span>
+                            {% else %}
+                                <span class="badge-status">🟡 {{ p_status }}</span>
+                                <form method="POST" action="/admin/verify-payment/{{ p_id }}" style="display:inline;">
+                                    <button type="submit" class="btn-verify" onclick="return confirm('क्या आपने बैंक खाते में पैसे चेक कर लिए हैं? इसे Verified मार्क करें?')">✅ Mark Verified</button>
+                                </form>
+                            {% endif %}
+                        </td>
                         <td style="color: #888;">{{ p_time }}</td>
                     </tr>
                     {% else %}
