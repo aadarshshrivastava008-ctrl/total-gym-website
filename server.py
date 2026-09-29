@@ -32,9 +32,10 @@ if os.path.exists(".env"):
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "velora@123")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "aadarshshrivastava008@gmail.com")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
-# आपका 100% सही और टेस्टेड Google Webhook URL
+# Groq / Llama 3 API Key (100% Free)
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+
 GOOGLE_MAIL_WEBHOOK = os.environ.get(
     "MAIL_WEBHOOK_URL",
     "https://script.google.com/macros/s/AKfycbxTbmhpLEeTK1i0Jb9X7gMGDt6-tJ_QaNnjnQo9tPNWR5TxBKUYR3Et8RsTX4S-ztUwcg/exec"
@@ -68,7 +69,6 @@ def send_otp_background(to_email, otp_code):
     print(f"📧 Destination: {to_email}")
     print("=" * 48 + "\n")
 
-    # 1. Google Webhook के ज़रिए सीधे ईमेल भेजना
     if GOOGLE_MAIL_WEBHOOK:
         try:
             payload = json.dumps({
@@ -93,7 +93,6 @@ def send_otp_background(to_email, otp_code):
         except Exception as e:
             print(f"⚠️ Webhook Email Note: {e}")
 
-    # 2. बैकअप के लिए SMTP
     if SMTP_EMAIL and SMTP_PASSWORD:
         try:
             msg = MIMEText(f"Hello,\n\nYour Avengers Fitness Club Admin verification OTP is: {otp_code}\n\nValid for 5 minutes.\n\n- Avengers Fitness Club Security")
@@ -160,7 +159,7 @@ def home():
 def serve_file(filename):
     return send_from_directory(".", filename)
 
-# चैटबॉट API
+# चैटबॉट API (Groq Llama 3.3 70B - Superfast & Free)
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
@@ -169,17 +168,17 @@ def chat():
     if not user_msg:
         return jsonify({"reply": "Please ask a question."}), 400
 
-    system_instructions = "You are Avengers Fitness Club Assistant. Be helpful and polite. Keep words like Fees, Timing, Membership in English."
+    system_instructions = "You are Avengers Fitness Club Assistant. Be helpful, polite and concise. Keep words like Fees, Timing, Membership in English."
     if os.path.exists("instructions.txt"):
         with open("instructions.txt", "r", encoding="utf-8") as f:
             system_instructions = f.read()
 
-    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
 
-    if api_key and api_key != "यहाँ_अपनी_असली_OpenAI_API_Key_डालें":
+    if api_key:
         try:
             req_data = json.dumps({
-                "model": "gpt-4o-mini",
+                "model": "llama-3.3-70b-versatile",
                 "messages": [
                     {"role": "system", "content": system_instructions},
                     {"role": "user", "content": user_msg}
@@ -189,7 +188,7 @@ def chat():
             }).encode("utf-8")
 
             req = urllib.request.Request(
-                "https://api.openai.com/v1/chat/completions",
+                "https://api.groq.com/openai/v1/chat/completions",
                 data=req_data,
                 headers={
                     "Content-Type": "application/json",
@@ -203,8 +202,9 @@ def chat():
                 return jsonify({"reply": reply})
 
         except Exception as e:
-            print(f"Chatbot API Note: {e}")
+            print(f"Groq Chatbot API Note: {e}")
 
+    # बैकअप (Fallback) जवाब:
     lower = user_msg.lower()
     if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे"]):
         reply = "Avengers Fitness Club का Timing:\n• Monday to Saturday: 5:30 AM – 10:45 PM\n• Sunday: 7:00 AM – 2:00 PM\nFacility Tours: Morning 7:00 AM – 11:00 AM & Evening 5:00 PM – 9:00 PM"
