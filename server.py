@@ -36,7 +36,7 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "aadarshshrivastava008@gmail.com")
 # Groq / Llama 3 API Key (100% Free)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
 
-# जिम का UPI ID (बाद में Render Environment में GYM_UPI_ID से 1 सेकंड में बदला जा सकता है)
+# जिम का UPI ID (बाद में Render Environment में GYM_UPI_ID से बदला जा सकता है)
 GYM_UPI_ID = os.environ.get("GYM_UPI_ID", "avengersfitness@upi")
 GYM_NAME = os.environ.get("GYM_NAME", "Avengers Fitness Club")
 
@@ -95,7 +95,7 @@ def send_otp_background(to_email, otp_code):
                 return
             print(f"⚠️ Webhook Email Note: {e}")
         except Exception as e:
-            print(f"⚠️ Webhook Email Note: {e}")
+            print(f"⚠️️ Webhook Email Note: {e}")
 
     if SMTP_EMAIL and SMTP_PASSWORD:
         try:
@@ -407,7 +407,7 @@ OTP_HTML = """
 </html>
 """
 
-# व्यवस्थित एडमिन डैशबोर्ड (Inquiries + UPI Payments with Verify Action)
+# व्यवस्थित एडमिन डैशबोर्ड (Inquiries + UPI Payments with Email Column)
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
@@ -452,7 +452,7 @@ DASHBOARD_HTML = """
             </div>
         </div>
 
-        <!-- 1. ऑनलाइन UPI पेमेंट्स टेबल -->
+        <!-- 1. ऑनलाइन UPI पेमेंट्स टेबल (EMAIL कॉलम के साथ) -->
         <div class="section-title">💳 Online UPI Payments & Memberships (UTR Submissions)</div>
         <div class="table-card">
             <table>
@@ -461,6 +461,7 @@ DASHBOARD_HTML = """
                         <th>ID</th>
                         <th>NAME</th>
                         <th>PHONE</th>
+                        <th>EMAIL</th>
                         <th>PLAN</th>
                         <th>AMOUNT</th>
                         <th>UTR NUMBER</th>
@@ -474,6 +475,7 @@ DASHBOARD_HTML = """
                         <td>#{{ p_id }}</td>
                         <td style="font-weight: bold; color: #fff;">{{ p_name }}</td>
                         <td style="color: #e5a93c;">{{ p_phone }}</td>
+                        <td><a href="mailto:{{ p_email }}" style="color: #6495ed; text-decoration: none;">{{ p_email or '—' }}</a></td>
                         <td>{{ p_plan }}</td>
                         <td class="amount-tag">₹{{ p_amount }}</td>
                         <td class="utr-code">{{ p_utr }}</td>
@@ -491,7 +493,7 @@ DASHBOARD_HTML = """
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" style="text-align: center; color: #666; padding: 30px;">No online payments submitted yet.</td>
+                        <td colspan="9" style="text-align: center; color: #666; padding: 30px;">No online payments submitted yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
