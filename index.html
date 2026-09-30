@@ -1099,6 +1099,13 @@ function submitUpiPayment(e) {
           <div id="callLiveSubtitle" style="font-size: 13px; color: #e0e0e0; line-height: 1.4;">"नमस्ते! Avengers Fitness Club में आपका स्वागत है..."</div>
       </div>
 
+      <!-- 🎟️ फ्री गेट पास इनपुट बॉक्स (शुरू में छुपा रहेगा, प्रिया के बोलते ही दिखेगा) -->
+    <div id="voicePassBox" style="display: none; background: #181822; border: 1px solid #e5a93c; border-radius: 12px; padding: 14px; margin-bottom: 15px; text-align: left; box-shadow: 0 4px 20px rgba(229,169,60,0.25);">
+      <div style="color: #e5a93c; font-size: 13px; font-weight: bold; margin-bottom: 8px;">🎟️ फ्री गेट पास (Free Gate Pass) बुक करें:</div>
+      <input type="text" id="passClientName" placeholder="आपका पूरा नाम (Full Name)" style="width: 100%; padding: 10px; margin-bottom: 8px; background: #22222c; border: 1px solid #444; border-radius: 8px; color: #fff; box-sizing: border-box; font-size: 13px; outline: none;">
+      <input type="tel" id="passClientPhone" placeholder="10 अंकों का मोबाइल नंबर" maxlength="10" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #22222c; border: 1px solid #444; border-radius: 8px; color: #fff; box-sizing: border-box; font-size: 13px; outline: none;">
+      <button type="button" onclick="submitVoicePass()" style="width: 100%; padding: 11px; background: #e5a93c; color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">✅ पास सबमिट करें</button>
+  </div>
       <!-- Quick Topic Chips (ताकि ग्राहक 1 क्लिक में भी तुरंत पूछ सके) -->
       <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 15px;">
           <button onclick="askPriyaQuick('Gym ki fees aur membership plans kya hain?')" style="background: #202028; border: 1px solid #444; color: #e5a93c; padding: 5px 10px; border-radius: 15px; font-size: 11px; cursor: pointer;">💰 Fees & Plans</button>
@@ -1227,7 +1234,50 @@ function listenToUser() {
       if (recognition) recognition.start();
   } catch(e) {}
 }
+// 🎟️ फ्री पास विज़िट दिन और सबमिशन फ़ंक्शन
+let currentVoiceVisitDay = 'कल (Tomorrow)';
 
+function submitVoicePass() {
+  const nameInput = document.getElementById('passClientName');
+  const phoneInput = document.getElementById('passClientPhone');
+  const name = nameInput ? nameInput.value.trim() : '';
+  const phone = phoneInput ? phoneInput.value.trim() : '';
+
+  if (!name) {
+    alert('कृपया अपना नाम दर्ज करें।');
+    return;
+  }
+  if (!phone || phone.length < 10) {
+    alert('कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।');
+    return;
+  }
+
+  fetch('/api/book-voice-pass', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: name,
+      phone: phone,
+      visit_day: currentVoiceVisitDay
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    // बॉक्स छुपाएं
+    const box = document.getElementById('voicePassBox');
+    if (box) box.style.display = 'none';
+
+    // स्क्रीन पर टेक्स्ट दिखाएं
+    const sub = document.getElementById('callLiveSubtitle');
+    if (sub) sub.innerText = data.reply;
+
+    // प्रिया की आवाज़ में बधाई बोलें
+    speakPriyaVoice(data.reply, () => {
+      listenToUser();
+    });
+  })
+  .catch(err => console.error('Pass booking error:', err));
+}
 // Groq AI से उत्तर प्राप्त करना
 function askPriyaAI(userQuery) {
   document.getElementById('callStatusIndicator').innerText = "🤔 प्रिया उत्तर तैयार कर रही है...";
@@ -1241,6 +1291,11 @@ function askPriyaAI(userQuery) {
   .then(res => res.json())
   .then(data => {
       if (!isCallActive) return;
+      if (data.show_pass_form) {
+      currentVoiceVisitDay = data.visit_day || 'कल (Tomorrow)';
+      const pBox = document.getElementById('voicePassBox');
+      if (pBox) pBox.style.display = 'block';
+    }
       const reply = data.reply || "एवेंजर्स फिटनेस क्लब में आपका स्वागत है। आप जब चाहें फ्री जिम टूर के लिए आ सकते हैं।";
       speakPriyaVoice(reply, () => {
           listenToUser();
