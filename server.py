@@ -33,10 +33,10 @@ ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "velora@123")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "aadarshshrivastava008@gmail.com")
 
-# Groq / Llama 3 API Key (100% Free)
+# Groq / Llama 3 API Key
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
 
-# जिम का UPI ID (बाद में Render Environment में GYM_UPI_ID से बदला जा सकता है)
+# जिम का UPI ID
 GYM_UPI_ID = os.environ.get("GYM_UPI_ID", "avengersfitness@upi")
 GYM_NAME = os.environ.get("GYM_NAME", "Avengers Fitness Club")
 
@@ -190,22 +190,27 @@ def home():
 def serve_file(filename):
     return send_from_directory(".", filename)
 
-# चैटबॉट API (Groq Llama 3.3 70B - Superfast & Free)
+# ==================== प्रिया AI चैटबॉट और वॉयस कॉल API (100% महिला व्याकरण & सटीक जवाब) ====================
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
     user_msg = data.get("message", "").strip()
 
     if not user_msg:
-        return jsonify({"reply": "Please ask a question."}), 400
+        return jsonify({"reply": "नमस्ते! मैं प्रिया बोल रही हूँ। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"}), 200
 
-    system_instructions = "You are Avengers Fitness Club Assistant. Be helpful, polite and concise. Keep words like Fees, Timing, Membership in English."
-    if os.path.exists("instructions.txt"):
-        with open("instructions.txt", "r", encoding="utf-8") as f:
-            system_instructions = f.read()
+    system_instructions = (
+        "You are Priya, a 24-year-old friendly female front-desk manager at Avengers Fitness Club, Thane West. "
+        "CRITICAL RULES: "
+        "1. ALWAYS speak in feminine Hindi grammar (e.g. 'मैं कर सकती हूँ', 'मैं प्रिया बोल रही हूँ', 'बता सकती हूँ'). NEVER use male words like 'सकता हूँ'. "
+        "2. If the user speaks Marathi, reply in polite Marathi. "
+        "3. If the user speaks Hindi or English, ALWAYS write your reply in Hindi Devanagari script (हिंदी लिपि) so the voice engine speaks in a 100% natural Indian female accent. "
+        "4. Keep answers short (1-2 sentences) and conversational. Directly answer the question asked (fees, timings, location, equipment)."
+    )
 
     api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
 
+    # Groq Llama 3.3 से डायनामिक उत्तर
     if api_key:
         try:
             req_data = json.dumps({
@@ -215,7 +220,7 @@ def chat():
                     {"role": "user", "content": user_msg}
                 ],
                 "temperature": 0.7,
-                "max_tokens": 300
+                "max_tokens": 150
             }).encode("utf-8")
 
             req = urllib.request.Request(
@@ -227,27 +232,36 @@ def chat():
                 }
             )
 
-            with urllib.request.urlopen(req, timeout=12) as response:
+            with urllib.request.urlopen(req, timeout=10) as response:
                 result = json.loads(response.read().decode("utf-8"))
-                reply = result["choices"][0]["message"]["content"]
+                reply = result["choices"][0]["message"]["content"].strip()
                 return jsonify({"reply": reply})
 
         except Exception as e:
-            print(f"Groq Chatbot API Note: {e}")
+            print(f"⚠️ Groq API Note: {e}")
 
+    # ==================== बैकअप (Fallback) - शुद्ध हिंदी और महिला जेंडर ====================
     lower = user_msg.lower()
-    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे"]):
-        reply = "Avengers Fitness Club का Timing:\n• Monday to Saturday: 5:30 AM – 10:45 PM\n• Sunday: 7:00 AM – 2:00 PM\nFacility Tours: Morning 7:00 AM – 11:00 AM & Evening 5:00 PM – 9:00 PM"
-    elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "कीमत", "पैसा"]):
-        reply = "हमारे Membership Plans हैं:\n1. Annual Promo Offer: ₹11,999/year (Best Value! Includes Being Strong machines, CrossFit, Steam Bath & Diet Plan)\n2. Gold Annual + PT: ₹15,999/year (Includes 1 Month Personal Training)\n3. Short-Term Monthly: ₹2,499/month\n\nAap website par 'Pay via UPI' button se direct online pay kar sakte hain!"
-    elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha", "landmark"]):
-        reply = "Avengers Fitness Club का Address:\nShop No. 2, Bhukendra Bus Stop, Pokharan Road No. 1, Near Yeoor Hills Road / Yeoor Gate, Upvan, Thane West, Maharashtra - 400606.\nPhone / WhatsApp: +91 86556 69966, +91 86554 49988"
-    elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "amenities", "steam"]):
-        reply = "हमारे पास 5,500 sq ft का बड़ा स्पेस है, जिसमें Being Strong equipment, CrossFit, Steam Bath & Zumba facilities available hain!"
-    elif any(k in lower for k in ["phone", "contact", "whatsapp", "call", "नंबर"]):
-        reply = "Aap humein call ya WhatsApp kar sakte hain:\n📞 +91 86556 69966\n📞 +91 86554 49988"
+    
+    # 1. समय और टाइमिंग (Timing)
+    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule"]):
+        reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक, और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय आना पसंद करेंगी या करेंगे?"
+    
+    # 2. फीस और पैकेज (Fees & Plans)
+    elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "offer", "फीस", "पैसा", "कीमत", "चार्ज", "रेट", "खर्च", "प्लान", "पैसे"]):
+        reply = "हमारा सबसे लोकप्रिय एनुअल स्पेशल प्लान केवल 11,999 रुपये प्रति वर्ष का है, जिसमें बीइंग स्ट्रांग मशीनें और स्टीम बाथ शामिल हैं। वहीं मंथली प्लान 2,499 रुपये का है। क्या मैं आपके लिए एक दिन का फ्री गेस्ट पास बुक कर दूँ?"
+    
+    # 3. पता और लोकेशन (Location & Address)
+    elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha", "landmark", "किधर", "कहा", "जगह", "रास्ता", "upvan", "thane", "ठाणे"]):
+        reply = "हमारा जिम ठाणे वेस्ट में उपवन लेक और येउर हिल्स के पास, पोखरण रोड नंबर एक पर स्थित है। आप यहाँ बहुत आसानी से आ सकते हैं।"
+    
+    # 4. मशीनें, सुविधाएं और जानकारी (Equipment & Info)
+    elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "steam", "मशीन", "सुविधा", "ट्रेनर", "स्टीम", "जिम", "जानकारी", "बताओ", "details", "trainer"]):
+        reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकती हैं।"
+    
+    # 5. सामान्य डिफ़ॉल्ट (Default - महिला व्याकरण)
     else:
-        reply = "Namaste! Avengers Fitness Club mein aapka welcome hai. Main aapki kya help kar sakta hoon?"
+        reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
 
     return jsonify({"reply": reply})
 
@@ -308,7 +322,7 @@ def pay_upi():
         print(f"⚠️ Pay-UPI DB Error: {e}")
         return jsonify({"success": False, "message": "Database error"}), 500
 
-# एडमिन द्वारा पेमेंट वेरिफाई करने का नया रूट
+# एडमिन द्वारा पेमेंट वेरिफाई करने का रूट
 @app.route("/admin/verify-payment/<int:payment_id>", methods=["POST"])
 def verify_payment(payment_id):
     if not session.get("logged_in"):
