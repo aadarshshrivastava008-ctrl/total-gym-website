@@ -968,6 +968,8 @@
 
           <label style="display: block; font-size: 12px; color: #a0a0a0; margin-bottom: 4px;">WhatsApp Phone Number *</label>
           <input type="tel" id="upiCustPhone" required placeholder="10-digit mobile number" style="width: 100%; padding: 10px; margin-bottom: 12px; background: #202024; border: 1px solid #333; border-radius: 6px; color: #fff; box-sizing: border-box; outline: none;">
+          <label style="display: block; font-size: 12px; color: #a0a0a0; margin-bottom: 4px;">Email Address *</label>
+<input type="email" id="upiCustEmail" required placeholder="name@example.com" style="width: 100%; padding: 10px; margin-bottom: 12px; background: #202024; border: 1px solid #333; border-radius: 6px; color: #fff; box-sizing: border-box; outline: none;">
 
           <label style="display: block; font-size: 12px; color: #a0a0a0; margin-bottom: 4px;">12-digit UTR / UPI Reference No. *</label>
           <input type="text" id="upiCustUtr" required maxlength="16" placeholder="e.g. 427189032185" style="width: 100%; padding: 12px; margin-bottom: 6px; background: #202024; border: 1px solid #e5a93c; border-radius: 6px; color: #e5a93c; font-weight: bold; font-size: 15px; text-align: center; letter-spacing: 2px; box-sizing: border-box; outline: none;">
@@ -1028,6 +1030,7 @@ function submitUpiPayment(e) {
   const payload = {
       name: document.getElementById("upiCustName").value.trim(),
       phone: document.getElementById("upiCustPhone").value.trim(),
+      email: document.getElementById("upiCustEmail").value.trim(),
       plan_name: document.getElementById("upiFormPlanName").value,
       amount: document.getElementById("upiFormAmount").value,
       utr_no: document.getElementById("upiCustUtr").value.trim()
