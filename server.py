@@ -246,25 +246,8 @@ def chat():
     # ==================== बैकअप (Fallback) - सटीक कीवर्ड मैचिंग ====================
     lower = user_msg.lower()
 # =========================================================================
-    # 0. फ्री गेस्ट पास, विज़िट डेट, नाम और मोबाइल नंबर हैंडलिंग (Voice Lead Flow)
+    # 0. फ्री गेस्ट पास और विज़िट डेट हैंडलिंग (Show Manual Input Boxes)
     # =========================================================================
-    import re
-
-    # (A) मोबाइल नंबर और नाम पहचानने का लॉजिक
-    digits_only = re.sub(r"[^\d]", "", user_msg)
-    phone_match = re.search(r"[6-9]\d{9}", digits_only)
-    extracted_phone = phone_match.group(0) if phone_match else None
-
-    extracted_name = None
-    name_match = re.search(r"(?:मेरा\s*नाम|नाम|my\s*name\s*is|name\s*is)\s*[:\-\s]*([A-Za-z\u0900-\u097F\s]+?)(?:\s*(?:है|hai|हूँ|hun|aur|और|number|नंबर|फोन|phone|\d)|$)", user_msg, re.IGNORECASE)
-    if name_match:
-        extracted_name = name_match.group(1).strip()
-    elif extracted_phone:
-        words_without_phone = re.sub(r"\b[6-9]\d{9}\b", "", user_msg)
-        clean_words = re.sub(r"(?:मेरा|नंबर|फोन|number|phone|hai|है|aur|और|हूँ|जी)", "", words_without_phone, flags=re.IGNORECASE).strip()
-        if len(clean_words) >= 2 and not any(k in clean_words.lower() for k in ["कल", "pass", "पास", "book", "आऊंगा", "आऊँगा"]):
-            extracted_name = clean_words
-
     yes_words = ["हाँ", "हां", "ha", "haan", "yes", "book", "बुक", "कर दो", "कर दीजिए", "फ्री पास", "गेस्ट पास", "गेट पास", "pass"]
     no_words = ["नहीं", "नही", "nahi", "no", "na", "ना", "नहीं चाहिए", "नहीं बनवाना", "रहने दो", "बाद में"]
     day_words = ["कल", "tomorrow", "parso", "परसों", "narso", "नरसों", "after tomorrow", "आज", "today", "आऊंगा", "आऊँगा", "aunga", "aungi", "monday", "sunday", "सोमवार", "रविवार", "तारीख", "date", "विजिट"]
@@ -274,42 +257,12 @@ def chat():
     has_day = any(d in lower for d in day_words)
 
     # 1. अगर क्लाइंट ने मना किया ("नहीं / No")
-    if has_no and not (has_yes or has_day or extracted_phone):
-        session.pop("pending_visit_day", None)
+    if has_no and not (has_yes or has_day):
         reply = "कोई बात नहीं! एवेंजर्स फिटनेस क्लब में कॉल करने और बात करने के लिए आपका बहुत-बहुत धन्यवाद। जब भी आपको समय मिले, आप एक बार हमारे जिम में जरूर विजिट कीजिएगा। आपका दिन शुभ हो!"
         return jsonify({"reply": reply})
 
-    # 2. जब क्लाइंट अपना नाम या मोबाइल नंबर बताए (या विज़िट डेट पहले से पेंडिंग हो)
-    if extracted_phone or (session.get("pending_visit_day") and (extracted_name or extracted_phone)):
-        visit_day = session.pop("pending_visit_day", None) or "कल (Tomorrow)"
-
-        final_name = extracted_name or data.get("name") or "Voice Call Guest"
-        final_phone = extracted_phone or data.get("phone") or "Via Voice Call"
-        clean_user = re.sub(r"[^a-zA-Z0-9]", "", final_name).lower() or "guest"
-        final_email = data.get("email") or f"{clean_user}@guest.avengersfitness.com"
-        pass_note = f"1-Day Free Guest Pass [Visit Scheduled: {visit_day}]"
-
-        now_ist = datetime.datetime.now(IST).strftime("%Y-%m-%d %I:%M:%S %p")
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            placeholder = "%s" if (DATABASE_URL and psycopg2) else "?"
-            cursor.execute(f"""
-                INSERT INTO inquiries (name, email, phone, message, created_at)
-                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
-            """, (final_name, final_email, final_phone, pass_note, now_ist))
-            conn.commit()
-            conn.close()
-            print(f"✅ Pass successfully booked for {final_name} ({final_phone}) on {visit_day}!")
-        except Exception as err:
-            print(f"⚠️ Pass DB Save Error: {err}")
-
-        client_greeting = f"{final_name} जी" if final_name != "Voice Call Guest" else ""
-        reply = f"बधाई हो {client_greeting}! आपका एक दिन का फ्री गेस्ट पास {visit_day} के लिए सफलतापूर्वक बुक कर दिया गया है। आप जब भी आएं, रिसेप्शन पर अपना मोबाइल नंबर बताकर वर्कआउट शुरू कर सकते हैं। एवेंजर्स फिटनेस क्लब में आपका स्वागत है!"
-        return jsonify({"reply": reply, "booked": True, "name": final_name, "phone": final_phone})
-
-    # 3. अगर क्लाइंट ने विज़िट का दिन बताया ("कल / Tomorrow / परसों आदि") -> नाम और नंबर मांगें
-    elif has_day:
+    # 2. अगर क्लाइंट ने विज़िट का दिन बताया ("कल / Tomorrow / परसों आदि") या "हाँ" कहा -> इनपुट बॉक्स दिखाएं
+    elif has_day or has_yes:
         if "परसों" in lower or "parso" in lower or "after tomorrow" in lower:
             visit_day = "परसों (Day After Tomorrow)"
         elif "नरसों" in lower or "narso" in lower:
@@ -319,16 +272,14 @@ def chat():
         elif "आज" in lower or "today" in lower:
             visit_day = "आज (Today)"
         else:
-            visit_day = user_msg
+            visit_day = "कल (Tomorrow)"
 
-        session["pending_visit_day"] = visit_day
-        reply = f"शानदार! {visit_day} के लिए आपका पास तैयार करने के लिए, कृपया अपना नाम और 10 अंकों का मोबाइल नंबर बता दीजिए?"
-        return jsonify({"reply": reply, "visit_day": visit_day})
-
-    # 4. अगर क्लाइंट ने केवल "हाँ / बुक कर दो" कहा
-    elif has_yes:
-        reply = "बहुत बढ़िया! आप किस दिन विजिट करना चाहेंगे? जैसे कल, परसों या कोई खास तारीख?"
-        return jsonify({"reply": reply})
+        reply = f"शानदार! {visit_day} के लिए आपका पास तैयार करने के लिए, कृपया नीचे दिए गए बॉक्स में अपना नाम और मोबाइल नंबर लिखकर सबमिट कर दीजिए।"
+        return jsonify({
+            "reply": reply,
+            "show_pass_form": True,
+            "visit_day": visit_day
+        })
     # 1. समय और टाइमिंग (Timing)
     elif any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule", "kab khulta"]):
         reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक, और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय आना पसंद करेंगे?"
@@ -350,7 +301,35 @@ def chat():
         reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
 
     return jsonify({"reply": reply})
+# वॉयस कॉल स्क्रीन से मैनुअल पास बुक करने की API
+@app.route("/api/book-voice-pass", methods=["POST"])
+def book_voice_pass():
+    data = request.get_json(silent=True) or request.form or {}
+    name = data.get("name", "").strip() or "Voice Call Guest"
+    phone = data.get("phone", "").strip() or "Via Voice Call"
+    visit_day = data.get("visit_day", "कल (Tomorrow)").strip()
+    
+    clean_user = "".join([c for c in name if c.isalnum()]).lower() or "guest"
+    email = data.get("email", "").strip() or f"{clean_user}@guest.avengersfitness.com"
+    pass_note = f"1-Day Free Guest Pass [Visit Scheduled: {visit_day}]"
+    now_ist = datetime.datetime.now(IST).strftime("%Y-%m-%d %I:%M:%S %p")
 
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        placeholder = "%s" if (DATABASE_URL and psycopg2) else "?"
+        cursor.execute(f"""
+            INSERT INTO inquiries (name, email, phone, message, created_at)
+            VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+        """, (name, email, phone, pass_note, now_ist))
+        conn.commit()
+        conn.close()
+        print(f"✅ Voice pass booked for {name} ({phone}) on {visit_day}!")
+    except Exception as err:
+        print(f"⚠️ Voice Pass DB Error: {err}")
+
+    reply = f"बधाई हो {name} जी! आपका एक दिन का फ्री गेस्ट पास {visit_day} के लिए सफलतापूर्वक बुक हो गया है। आप जब भी आएं, रिसेप्शन पर अपना मोबाइल नंबर बताकर वर्कआउट शुरू कर सकते हैं। एवेंजर्स फिटनेस क्लब में आपका स्वागत है!"
+    return jsonify({"success": True, "reply": reply})
 # सामान्य फ़ॉर्म सबमिशन API
 @app.route("/api/inquire", methods=["POST"])
 def inquire():
