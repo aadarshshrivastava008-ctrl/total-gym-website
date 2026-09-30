@@ -1069,5 +1069,210 @@ function submitUpiPayment(e) {
   });
 }
 </script>
+<!-- ================= LIVE AI VOICE CALL MODAL (PRIYA - AVENGERS FITNESS) ================= -->
+<!-- Floating Call Button -->
+<div id="priyaCallFloatingBtn" onclick="startVoiceCall()" style="position: fixed; bottom: 90px; right: 25px; z-index: 9999; background: linear-gradient(135deg, #e5a93c, #b37d1e); color: #000; padding: 12px 18px; border-radius: 50px; font-weight: bold; font-size: 14px; box-shadow: 0 8px 25px rgba(229,169,60,0.5); cursor: pointer; display: flex; align-items: center; gap: 8px; border: 2px solid #fff; font-family: 'Segoe UI', sans-serif; transition: transform 0.2s;">
+  <span style="font-size: 18px;">📞</span> Talk to Priya (AI Manager)
+</div>
+
+<!-- Fullscreen Calling Interface Modal -->
+<div id="voiceCallModal" style="display: none; position: fixed; z-index: 100000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(5,5,8,0.95); backdrop-filter: blur(10px); justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif;">
+  <div style="text-align: center; color: #fff; width: 90%; max-width: 380px; padding: 30px; background: #121216; border: 1px solid #333; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.9); position: relative;">
+      
+      <!-- Gym Brand Badge -->
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #e5a93c; margin-bottom: 20px;">Avengers Fitness Club</div>
+
+      <!-- Avatar with Pulsing Ring -->
+      <div style="position: relative; width: 110px; height: 110px; margin: 0 auto 15px auto;">
+          <div id="callPulseRing" style="position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid #e5a93c; animation: pulseGlow 1.5s infinite; opacity: 0.6;"></div>
+          <div style="width: 100%; height: 100%; border-radius: 50%; background: #222; display: flex; justify-content: center; align-items: center; font-size: 48px; border: 2px solid #e5a93c;">
+              👩‍💼
+          </div>
+      </div>
+
+      <h3 style="margin: 0 0 5px 0; color: #fff; font-size: 22px;">Priya</h3>
+      <p style="margin: 0 0 10px 0; color: #888; font-size: 13px;">AI Front-Desk Manager</p>
+      <div id="callTimer" style="font-size: 14px; color: #e5a93c; font-weight: bold; margin-bottom: 20px;">Connecting...</div>
+
+      <!-- Status & Live Subtitles -->
+      <div style="background: #1a1a22; padding: 14px; border-radius: 12px; margin-bottom: 25px; min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+          <div id="callStatusIndicator" style="font-size: 12px; color: #75e08a; font-weight: bold; margin-bottom: 4px;">● Connected</div>
+          <div id="callLiveSubtitle" style="font-size: 13px; color: #ccc; line-height: 1.4;">"Namaste! Main Priya bol rahi hoon..."</div>
+      </div>
+
+      <!-- Call Controls -->
+      <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+          <!-- Mic Mute Button -->
+          <button id="toggleMicBtn" onclick="toggleMute()" style="width: 50px; height: 50px; border-radius: 50%; background: #2a2a34; border: 1px solid #444; color: #fff; font-size: 18px; cursor: pointer;">🎙️</button>
+          
+          <!-- Red End Call Button -->
+          <button onclick="endVoiceCall()" style="width: 65px; height: 65px; border-radius: 50%; background: #e63946; border: none; color: #fff; font-size: 26px; cursor: pointer; box-shadow: 0 6px 20px rgba(230,57,70,0.5);">📞</button>
+      </div>
+      <p style="font-size: 11px; color: #666; margin-top: 20px;">Speak naturally in Hindi, Marathi, or English</p>
+  </div>
+</div>
+
+<style>
+@keyframes pulseGlow {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+</style>
+
+<script>
+let recognition = null;
+let isCallActive = false;
+let callSeconds = 0;
+let callInterval = null;
+let isSpeaking = false;
+let isMuted = false;
+
+// 1. Initialize Speech Recognition (Hearing)
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRec();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'hi-IN'; // Understands Hindi, Marathi & English seamlessly
+
+  recognition.onresult = function(event) {
+      const spokenText = event.results[0][0].transcript;
+      if (spokenText.trim() && isCallActive && !isSpeaking) {
+          document.getElementById('callStatusIndicator').innerText = "🤔 Priya is thinking...";
+          document.getElementById('callLiveSubtitle').innerText = `You: "${spokenText}"`;
+          askPriyaAI(spokenText);
+      }
+  };
+
+  recognition.onerror = function(event) {
+      if (isCallActive && !isSpeaking && !isMuted) {
+          try { recognition.start(); } catch(e){}
+      }
+  };
+
+  recognition.onend = function() {
+      if (isCallActive && !isSpeaking && !isMuted) {
+          try { recognition.start(); } catch(e){}
+      }
+  };
+}
+
+// 2. Start Call Function
+function startVoiceCall() {
+  isCallActive = true;
+  isSpeaking = false;
+  isMuted = false;
+  callSeconds = 0;
+  document.getElementById('voiceCallModal').style.display = 'flex';
+
+  // Start Timer
+  clearInterval(callInterval);
+  callInterval = setInterval(() => {
+      callSeconds++;
+      const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+      const secs = String(callSeconds % 60).padStart(2, '0');
+      document.getElementById('callTimer').innerText = `${mins}:${secs}`;
+  }, 1000);
+
+  // Initial Welcome Greeting
+  const welcomeSpeech = "Namaste! Avengers Fitness Club mein aapka swagat hai. Main Priya bol rahi hoon. Batayiye, main aapki kya madad kar sakti hoon?";
+  speakPriyaVoice(welcomeSpeech, () => {
+      listenToUser();
+  });
+}
+
+// 3. Listen to User (Mic)
+function listenToUser() {
+  if (!isCallActive || isSpeaking || isMuted) return;
+  document.getElementById('callStatusIndicator').innerText = "🎙️ Listening to you... (Speak now)";
+  document.getElementById('callPulseRing').style.borderColor = "#75e08a";
+  try {
+      recognition.start();
+  } catch(e) {}
+}
+
+// 4. Send spoken message to Groq Llama 3.3 Backend
+function askPriyaAI(userQuery) {
+  fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userQuery })
+  })
+  .then(res => res.json())
+  .then(data => {
+      if (!isCallActive) return;
+      const reply = data.reply || "Aap Avengers Fitness Club visit kijiye, hum aapko poori facility dikhayenge.";
+      speakPriyaVoice(reply, () => {
+          listenToUser();
+      });
+  })
+  .catch(err => {
+      if (!isCallActive) return;
+      speakPriyaVoice("Hamara gym Thane West mein Pokharan Road number ek par hai. Aap kab visit karna chahenge?", () => {
+          listenToUser();
+      });
+  });
+}
+
+// 5. Priya Speaks (Speech Synthesis in Indian Voice)
+function speakPriyaVoice(textToSpeak, callback) {
+  if (!isCallActive) return;
+  isSpeaking = true;
+  try { recognition.stop(); } catch(e){}
+
+  document.getElementById('callStatusIndicator').innerText = "🗣️ Priya is speaking...";
+  document.getElementById('callLiveSubtitle').innerText = textToSpeak;
+  document.getElementById('callPulseRing').style.borderColor = "#e5a93c";
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(textToSpeak);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.1; // Friendly young female pitch
+
+  // Choose Indian / Hindi / English female voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const preferredVoice = voices.find(v => v.lang.includes('hi') || v.lang.includes('IN') || v.name.toLowerCase().includes('female'));
+  if (preferredVoice) utterance.voice = preferredVoice;
+
+  utterance.onend = function() {
+      isSpeaking = false;
+      if (callback && isCallActive) callback();
+  };
+
+  utterance.onerror = function() {
+      isSpeaking = false;
+      if (callback && isCallActive) callback();
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// 6. Toggle Mute
+function toggleMute() {
+  isMuted = !isMuted;
+  const btn = document.getElementById('toggleMicBtn');
+  if (isMuted) {
+      btn.style.background = "#e63946";
+      btn.innerText = "🔇";
+      try { recognition.stop(); } catch(e){}
+      document.getElementById('callStatusIndicator').innerText = "Muted";
+  } else {
+      btn.style.background = "#2a2a34";
+      btn.innerText = "🎙️";
+      listenToUser();
+  }
+}
+
+// 7. End Call
+function endVoiceCall() {
+  isCallActive = false;
+  isSpeaking = false;
+  clearInterval(callInterval);
+  try { recognition.stop(); } catch(e){}
+  window.speechSynthesis.cancel();
+  document.getElementById('voiceCallModal').style.display = 'none';
+}
+</script>
 </body>
 </html>
