@@ -95,7 +95,7 @@ def send_otp_background(to_email, otp_code):
                 return
             print(f"⚠️ Webhook Email Note: {e}")
         except Exception as e:
-            print(f"⚠️️ Webhook Email Note: {e}")
+            print(f"⚠️ Webhook Email Note: {e}")
 
     if SMTP_EMAIL and SMTP_PASSWORD:
         try:
@@ -190,7 +190,7 @@ def home():
 def serve_file(filename):
     return send_from_directory(".", filename)
 
-# ==================== प्रिया AI चैटबॉट और वॉयस कॉल API (100% महिला व्याकरण & सटीक जवाब) ====================
+# ==================== प्रिया AI चैटबॉट और वॉयस कॉल API ====================
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
@@ -200,17 +200,20 @@ def chat():
         return jsonify({"reply": "नमस्ते! मैं प्रिया बोल रही हूँ। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"}), 200
 
     system_instructions = (
-        "You are Priya, a 24-year-old friendly female front-desk manager at Avengers Fitness Club, Thane West. "
-        "CRITICAL RULES: "
-        "1. ALWAYS speak in feminine Hindi grammar (e.g. 'मैं कर सकती हूँ', 'मैं प्रिया बोल रही हूँ', 'बता सकती हूँ'). NEVER use male words like 'सकता हूँ'. "
-        "2. If the user speaks Marathi, reply in polite Marathi. "
-        "3. If the user speaks Hindi or English, ALWAYS write your reply in Hindi Devanagari script (हिंदी लिपि) so the voice engine speaks in a 100% natural Indian female accent. "
-        "4. Keep answers short (1-2 sentences) and conversational. Directly answer the question asked (fees, timings, location, equipment)."
+        "You are Priya, a 24-year-old friendly female front-desk manager at Avengers Fitness Club, Pokharan Road No. 1, Upvan, Thane West. "
+        "CRITICAL INSTRUCTIONS: "
+        "1. Always use feminine Hindi grammar ('मैं कर सकती हूँ', 'मैं प्रिया बोल रही हूँ', 'बता सकती हूँ'). "
+        "2. If user asks for ADDRESS or LOCATION: Explain it is at Shop No. 2, Bhukendra Bus Stop, Pokharan Road No. 1, near Yeoor Hills Gate & Upvan Lake, Thane West. "
+        "3. If user asks for FEES: Annual Special Deal is ₹11,999/yr and Monthly is ₹2,499/mo. "
+        "4. If user asks for TIMING: Mon-Sat 5:30 AM to 10:45 PM, Sunday 7:00 AM to 2:00 PM. "
+        "5. If user asks for EQUIPMENT/MACHINES: Mention 5,500 sq ft space, Salman Khan Being Strong equipment, CrossFit area and Steam Bath. "
+        "6. If customer speaks Marathi, reply in polite Marathi. "
+        "7. If customer speaks Hindi or English, reply in natural Hindi in Devanagari script. Keep answers to 1-2 short sentences."
     )
 
     api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
 
-    # Groq Llama 3.3 से डायनामिक उत्तर
+    # Groq Llama 3.3 AI से उत्तर
     if api_key:
         try:
             req_data = json.dumps({
@@ -240,26 +243,26 @@ def chat():
         except Exception as e:
             print(f"⚠️ Groq API Note: {e}")
 
-    # ==================== बैकअप (Fallback) - शुद्ध हिंदी और महिला जेंडर ====================
+    # ==================== बैकअप (Fallback) - सटीक कीवर्ड मैचिंग ====================
     lower = user_msg.lower()
-    
+
     # 1. समय और टाइमिंग (Timing)
-    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule"]):
-        reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक, और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय आना पसंद करेंगी या करेंगे?"
-    
-    # 2. फीस और पैकेज (Fees & Plans)
-    elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "offer", "फीस", "पैसा", "कीमत", "चार्ज", "रेट", "खर्च", "प्लान", "पैसे"]):
-        reply = "हमारा सबसे लोकप्रिय एनुअल स्पेशल प्लान केवल 11,999 रुपये प्रति वर्ष का है, जिसमें बीइंग स्ट्रांग मशीनें और स्टीम बाथ शामिल हैं। वहीं मंथली प्लान 2,499 रुपये का है। क्या मैं आपके लिए एक दिन का फ्री गेस्ट पास बुक कर दूँ?"
-    
-    # 3. पता और लोकेशन (Location & Address)
-    elif any(k in lower for k in ["location", "address", "कहाँ", "पता", "kaha", "landmark", "किधर", "कहा", "जगह", "रास्ता", "upvan", "thane", "ठाणे"]):
-        reply = "हमारा जिम ठाणे वेस्ट में उपवन लेक और येउर हिल्स के पास, पोखरण रोड नंबर एक पर स्थित है। आप यहाँ बहुत आसानी से आ सकते हैं।"
-    
-    # 4. मशीनें, सुविधाएं और जानकारी (Equipment & Info)
-    elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "steam", "मशीन", "सुविधा", "ट्रेनर", "स्टीम", "जिम", "जानकारी", "बताओ", "details", "trainer"]):
-        reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकती हैं।"
-    
-    # 5. सामान्य डिफ़ॉल्ट (Default - महिला व्याकरण)
+    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule", "kab khulta"]):
+        reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक, और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय आना पसंद करेंगे?"
+
+    # 2. पता और लोकेशन (Location & Address) - PRIORITIZED
+    elif any(k in lower for k in ["location", "address", "एड्रेस", "एड्रैस", "लोकेशन", "कहाँ", "पता", "kaha", "landmark", "किधर", "कहा", "जगह", "रास्ता", "upvan", "thane", "ठाणे", "पोखरण", "उपवन", "येउर", "yeoor", "road"]):
+        reply = "एवेंजर्स फिटनेस क्लब का पता है: शॉप नंबर 2, भूकेंद्र बस स्टॉप, पोखरण रोड नंबर 1, उपवन लेक और येउर गेट के पास, ठाणे वेस्ट। आप यहाँ बहुत आसानी से आ सकते हैं। क्या आप लोकेशन WhatsApp पर चाहते हैं?"
+
+    # 3. फीस और पैकेज (Fees & Plans)
+    elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "offer", "फीस", "पैसा", "कीमत", "चार्ज", "रेट", "खर्च", "प्लान", "पैसे", "charges"]):
+        reply = "हमारा सबसे लोकप्रिय एनुअल स्पेशल प्लान केवल 11,999 रुपये प्रति वर्ष का है, जिसमें बीइंग स्ट्रांग मशीनें और स्टीम बाथ शामिल हैं। मंथली प्लान 2,499 रुपये का है। क्या मैं आपके लिए एक दिन का फ्री गेस्ट पास बुक कर दूँ?"
+
+    # 4. मशीनें, सुविधाएं और ट्रेनर (Equipment & Facilities Only)
+    elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "steam", "मशीन", "मशीनें", "मशीनों", "सुविधा", "सुविधाएं", "सुविधाएँ", "ट्रेनर", "स्टीम", "स्टीम बाथ", "बीइंग स्ट्रांग", "being strong", "crossfit", "क्रॉसफिट", "डंबल", "dumbell", "इक्विपमेंट", "इक्विपमेंट्स"]):
+        reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकते हैं।"
+
+    # 5. सामान्य डिफ़ॉल्ट (Default)
     else:
         reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
 
