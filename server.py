@@ -245,9 +245,41 @@ def chat():
 
     # ==================== बैकअप (Fallback) - सटीक कीवर्ड मैचिंग ====================
     lower = user_msg.lower()
+    # 0.1 फ्री गेस्ट पास बुकिंग (हाँ / Yes)
+    yes_words = ["हाँ", "हां", "ha", "haan", "yes", "book", "बुक", "कर दो", "कर दीजिए", "फ्री पास", "गेस्ट पास", "गेट पास", "pass", "kar do", "bna do", "banado"]
+    no_words = ["नहीं", "नही", "nahi", "no", "na", "ना", "नहीं चाहिए", "नहीं बनवाना", "रहने दो", "बाद में"]
+
+    if any(word in lower for word in yes_words) and not any(no_word in lower for no_word in no_words):
+        now_ist = datetime.datetime.now(IST).strftime("%Y-%m-%d %I:%M:%S %p")
+        client_name = data.get("name") or "Live Voice Call Guest"
+        client_phone = data.get("phone") or "Via Voice Call"
+        client_email = data.get("email") or "voicecall@avengersfitness.com"
+        pass_note = "1-Day Free Guest Pass (Booked via Priya Voice Call)"
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = "%s" if (DATABASE_URL and psycopg2) else "?"
+            cursor.execute(f"""
+                INSERT INTO inquiries (name, email, phone, message, created_at)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+            """, (client_name, client_email, client_phone, pass_note, now_ist))
+            conn.commit()
+            conn.close()
+            print("✅ 1-Day Free Pass saved to database successfully!")
+        except Exception as err:
+            print(f"⚠️ Pass Booking Note: {err}")
+
+            reply = "बहुत बढ़िया! आपका एक दिन का फ्री गेस्ट पास सफलतापूर्वक बुक कर दिया गया है। आप जब भी हमारे जिम आएं, रिसेप्शन पर यह बताकर वर्कआउट शुरू कर सकते हैं। एवेंजर्स फिटनेस क्लब में आपका स्वागत है!"
+            return jsonify({"reply": reply, "booked": True})
+
+    # 0.2 अगर मना किया (नहीं / No)
+    elif any(no_word in lower for no_word in no_words):
+        reply = "कोई बात नहीं! एवेंजर्स फिटनेस क्लब में कॉल करने और बात करने के लिए आपका बहुत-बहुत धन्यवाद। जब भी आपको समय मिले, आप एक बार हमारे जिम में जरूर विजिट कीजिएगा। आपका दिन शुभ हो!"
+        return jsonify({"reply": reply})
 
     # 1. समय और टाइमिंग (Timing)
-    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule", "kab khulta"]):
+    elif any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule", "kab khulta"]):
         reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक, और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय आना पसंद करेंगे?"
 
     # 2. पता और लोकेशन (Location & Address) - PRIORITIZED
