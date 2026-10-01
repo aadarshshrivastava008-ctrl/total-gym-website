@@ -193,6 +193,8 @@ def serve_file(filename):
 # ==================== प्रिया AI चैटबॉट और वॉयस कॉल API ====================
 # चैटबॉट और वॉयस कॉल API (Top Priority Lead & Pass Flow)
 @app.route("/api/chat", methods=["POST"])
+# चैटबॉट और वॉयस कॉल API (Top Priority Lead & Pass Flow)
+@app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
     user_msg = data.get("message", "").strip()
@@ -201,10 +203,12 @@ def chat():
         return jsonify({"reply": "नमस्ते! मैं प्रिया बोल रही हूँ। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"}), 200
 
     lower = user_msg.lower()
+    import re
 
     # 1. अगर क्लाइंट ने मना किया ("नहीं / No")
-    no_phrases = ["नहीं", "नही", "nahi", "no", "nahin", "नहीं चाहिए", "नहीं बनवाना", "रहने दो", "बाद में", "not now"]
-    if any(p in lower for p in no_phrases):
+    no_phrases = ["नहीं", "नही", "nahi", "nahin", "नहीं चाहिए", "नहीं बनवाना", "रहने दो", "बाद में", "not now"]
+    has_no = any(p in lower for p in no_phrases) or bool(re.search(r"\bno\b", lower))
+    if has_no:
         reply = "कोई बात नहीं! एवेंजर्स फिटनेस क्लब में कॉल करने और बात करने के लिए आपका बहुत-बहुत धन्यवाद। जब भी आपको समय मिले, आप एक बार हमारे जिम में जरूर विजिट कीजिएगा। आपका दिन शुभ हो!"
         return jsonify({"reply": reply, "show_pass_form": False})
 
@@ -212,11 +216,9 @@ def chat():
     pass_booking_triggers = [
         "कल", "kal", "tomorrow", "parso", "परसों", "narso", "नरसों", "after tomorrow", "day after tomorrow",
         "बुक कर", "book kar", "पास बना", "pass bana", "pass book", "पास बुक", "gate pass", "गेस्ट पास", "गेट पास",
-        "फ्री पास", "free pass", "pass"
+        "फ्री पास", "free pass"
     ]
     has_booking = any(b in lower for b in pass_booking_triggers)
-    
-    import re
     has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or ("हाँ" in lower) or ("हां" in lower)
 
     # जब क्लाइंट पास बुक करने या आने का दिन बोले -> सीधे दोनों इनपुट बॉक्स दिखाएं
@@ -225,6 +227,12 @@ def chat():
             visit_day = "परसों (Day After Tomorrow)"
         elif "नरसों" in lower or "narso" in lower:
             visit_day = "नरसों (In 3 Days)"
+        elif "सुबह" in lower or "morning" in lower:
+            visit_day = "सुबह (Morning)"
+        elif "शाम" in lower or "evening" in lower:
+            visit_day = "शाम (Evening)"
+        elif "दोपहर" in lower or "afternoon" in lower:
+            visit_day = "दोपहर (Afternoon)"
         elif "कल" in lower or "kal" in lower or "tomorrow" in lower:
             visit_day = "कल (Tomorrow)"
         elif "आज" in lower or "aaj" in lower or "today" in lower:
@@ -239,27 +247,44 @@ def chat():
             "visit_day": visit_day
         })
 
-    # 3. समय और टाइमिंग (Timing)
+    # 3. पसंदीदा समय का जवाब (Morning, Afternoon, Evening Response)
+    morning_words = ["morning", "सुबह", "मॉर्निंग", "subah", "saverey", "savere"]
+    afternoon_words = ["afternoon", "दोपहर", "दुपहर", "dopahar"]
+    evening_words = ["evening", "शाम", "रात", "इवनिंग", "shaam", "sham", "night"]
+
+    if any(k in lower for k in morning_words):
+        reply = "बहुत बढ़िया! सुबह का समय वर्कआउट के लिए सबसे बेस्ट होता है, उस समय पूरा जिम फ्रेश एनर्जी और शानदार पॉजिटिव वाइब्स से भरा होता है। क्या मैं आपके लिए सुबह का 1-दिन का फ्री गेट पास बुक कर दूँ?"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    elif any(k in lower for k in afternoon_words):
+        reply = "शानदार चॉइस! दोपहर के समय जिम में काफी शांत और रिलैक्स माहौल रहता है, जिससे आप बिना किसी भीड़ के सभी Being Strong मशीनों और स्टीम बाथ का भरपूर मज़ा ले सकते हैं। क्या मैं आपके लिए दोपहर का फ्री पास बुक कर दूँ?"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    elif any(k in lower for k in evening_words):
+        reply = "अरे वाह! शाम का समय दिनभर की थकान मिटाने और एनर्जेटिक वर्कआउट के लिए एकदम परफेक्ट है। उस समय हमारे जिम में बहुत ही मोटिवेटिंग और एनर्जेटिक माहौल रहता है। क्या मैं आपके लिए शाम का फ्री पास बुक कर दूँ?"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 4. समय और टाइमिंग (Timing बटन / सवाल)
     if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule"]):
         reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय विजिट करना पसंद करेंगे?"
         return jsonify({"reply": reply, "show_pass_form": False})
 
-    # 4. पता और लोकेशन (Address)
+    # 5. पता और लोकेशन (Address बटन / सवाल)
     if any(k in lower for k in ["location", "address", "एड्रेस", "एड्रैस", "लोकेशन", "कहाँ", "पता", "kaha", "landmark", "किधर"]):
         reply = "एवेंजर्स फिटनेस क्लब का पता है: शॉप नंबर 2, भुकेंद्र बस स्टॉप, पोखरण रोड नंबर 1, उपवन लेक और येउर गेट के पास, ठाणे वेस्ट। आप यहाँ बहुत आसानी से पहुँच सकते हैं।"
         return jsonify({"reply": reply, "show_pass_form": False})
 
-    # 5. फीस और पैकेज (Fees)
+    # 6. फीस और पैकेज (Fees बटन / सवाल)
     if any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "offer", "फीस", "पैसा", "कीमत", "चार्ज", "रेट"]):
         reply = "हमारा सबसे लोकप्रिय एनुअल स्पेशल प्लान केवल 11,999 रुपये प्रति वर्ष का है, जिसमें बीइंग स्ट्रांग मशीनें और स्टीम बाथ शामिल हैं। मंथली प्लान 2,499 रुपये का है। क्या मैं आपके लिए एक दिन का फ्री गेस्ट पास बुक कर दूँ?"
         return jsonify({"reply": reply, "show_pass_form": False})
 
-    # 6. मशीनें और सुविधाएं (Equipment)
+    # 7. मशीनें और सुविधाएं (Equipment बटन / सवाल)
     if any(k in lower for k in ["equipment", "machine", "facility", "facilities", "steam", "मशीन", "मशीनें", "मशीनों", "सुविधा", "ट्रेनर", "स्टीम"]):
         reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकते हैं।"
         return jsonify({"reply": reply, "show_pass_form": False})
 
-    # 7. अगर कोई दूसरा अलग सवाल हो, तो Groq AI जवाब दे
+    # 8. अन्य सामान्य सवालों के लिए Groq AI
     api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
     if api_key:
         try:
