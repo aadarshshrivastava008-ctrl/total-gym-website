@@ -191,6 +191,7 @@ def serve_file(filename):
     return send_from_directory(".", filename)
 
 # ==================== प्रिया AI चैटबॉट और वॉयस कॉल API ====================
+# चैटबॉट और वॉयस कॉल API (Top Priority Lead & Pass Flow)
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
@@ -199,23 +200,73 @@ def chat():
     if not user_msg:
         return jsonify({"reply": "नमस्ते! मैं प्रिया बोल रही हूँ। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"}), 200
 
-    system_instructions = (
-        "You are Priya, a 24-year-old friendly female front-desk manager at Avengers Fitness Club, Pokharan Road No. 1, Upvan, Thane West. "
-        "CRITICAL INSTRUCTIONS: "
-        "1. Always use feminine Hindi grammar ('मैं कर सकती हूँ', 'मैं प्रिया बोल रही हूँ', 'बता सकती हूँ'). "
-        "2. If user asks for ADDRESS or LOCATION: Explain it is at Shop No. 2, Bhukendra Bus Stop, Pokharan Road No. 1, near Yeoor Hills Gate & Upvan Lake, Thane West. "
-        "3. If user asks for FEES: Annual Special Deal is ₹11,999/yr and Monthly is ₹2,499/mo. "
-        "4. If user asks for TIMING: Mon-Sat 5:30 AM to 10:45 PM, Sunday 7:00 AM to 2:00 PM. "
-        "5. If user asks for EQUIPMENT/MACHINES: Mention 5,500 sq ft space, Salman Khan Being Strong equipment, CrossFit area and Steam Bath. "
-        "6. If customer speaks Marathi, reply in polite Marathi. "
-        "7. If customer speaks Hindi or English, reply in natural Hindi in Devanagari script. Keep answers to 1-2 short sentences."
-    )
+    lower = user_msg.lower()
 
+    # 1. अगर क्लाइंट ने मना किया ("नहीं / No")
+    no_phrases = ["नहीं", "नही", "nahi", "no", "nahin", "नहीं चाहिए", "नहीं बनवाना", "रहने दो", "बाद में", "not now"]
+    if any(p in lower for p in no_phrases):
+        reply = "कोई बात नहीं! एवेंजर्स फिटनेस क्लब में कॉल करने और बात करने के लिए आपका बहुत-बहुत धन्यवाद। जब भी आपको समय मिले, आप एक बार हमारे जिम में जरूर विजिट कीजिएगा। आपका दिन शुभ हो!"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 2. फ्री गेस्ट पास बुकिंग / विज़िट डेट ("हाँ", "कल", "tomorrow", "after tomorrow", "gate pass", "बुक")
+    pass_booking_triggers = [
+        "कल", "kal", "tomorrow", "parso", "परसों", "narso", "नरसों", "after tomorrow", "day after tomorrow",
+        "बुक कर", "book kar", "पास बना", "pass bana", "pass book", "पास बुक", "gate pass", "गेस्ट पास", "गेट पास",
+        "फ्री पास", "free pass", "pass"
+    ]
+    has_booking = any(b in lower for b in pass_booking_triggers)
+    
+    import re
+    has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or ("हाँ" in lower) or ("हां" in lower)
+
+    # जब क्लाइंट पास बुक करने या आने का दिन बोले -> सीधे दोनों इनपुट बॉक्स दिखाएं
+    if has_booking or has_pure_yes:
+        if "after tomorrow" in lower or "परसों" in lower or "parso" in lower:
+            visit_day = "परसों (Day After Tomorrow)"
+        elif "नरसों" in lower or "narso" in lower:
+            visit_day = "नरसों (In 3 Days)"
+        elif "कल" in lower or "kal" in lower or "tomorrow" in lower:
+            visit_day = "कल (Tomorrow)"
+        elif "आज" in lower or "aaj" in lower or "today" in lower:
+            visit_day = "आज (Today)"
+        else:
+            visit_day = "कल (Tomorrow)"
+
+        reply = f"शानदार! {visit_day} के लिए आपका पास तैयार करने के लिए, कृपया नीचे दिए गए बॉक्स में अपना नाम और मोबाइल नंबर लिखकर सबमिट कर दीजिए।"
+        return jsonify({
+            "reply": reply,
+            "show_pass_form": True,
+            "visit_day": visit_day
+        })
+
+    # 3. समय और टाइमिंग (Timing)
+    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule"]):
+        reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय विजिट करना पसंद करेंगे?"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 4. पता और लोकेशन (Address)
+    if any(k in lower for k in ["location", "address", "एड्रेस", "एड्रैस", "लोकेशन", "कहाँ", "पता", "kaha", "landmark", "किधर"]):
+        reply = "एवेंजर्स फिटनेस क्लब का पता है: शॉप नंबर 2, भुकेंद्र बस स्टॉप, पोखरण रोड नंबर 1, उपवन लेक और येउर गेट के पास, ठाणे वेस्ट। आप यहाँ बहुत आसानी से पहुँच सकते हैं।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 5. फीस और पैकेज (Fees)
+    if any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "offer", "फीस", "पैसा", "कीमत", "चार्ज", "रेट"]):
+        reply = "हमारा सबसे लोकप्रिय एनुअल स्पेशल प्लान केवल 11,999 रुपये प्रति वर्ष का है, जिसमें बीइंग स्ट्रांग मशीनें और स्टीम बाथ शामिल हैं। मंथली प्लान 2,499 रुपये का है। क्या मैं आपके लिए एक दिन का फ्री गेस्ट पास बुक कर दूँ?"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 6. मशीनें और सुविधाएं (Equipment)
+    if any(k in lower for k in ["equipment", "machine", "facility", "facilities", "steam", "मशीन", "मशीनें", "मशीनों", "सुविधा", "ट्रेनर", "स्टीम"]):
+        reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकते हैं।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 7. अगर कोई दूसरा अलग सवाल हो, तो Groq AI जवाब दे
     api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
-
-    # Groq Llama 3.3 AI से उत्तर
     if api_key:
         try:
+            system_instructions = (
+                "You are Priya, a 24-year-old friendly female front-desk manager at Avengers Fitness Club, Thane West. "
+                "Always speak in feminine Hindi grammar. Keep response concise (1-2 sentences)."
+            )
             req_data = json.dumps({
                 "model": "llama-3.3-70b-versatile",
                 "messages": [
@@ -235,73 +286,14 @@ def chat():
                 }
             )
 
-            with urllib.request.urlopen(req, timeout=10) as response:
+            with urllib.request.urlopen(req, timeout=8) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 reply = result["choices"][0]["message"]["content"].strip()
-                return jsonify({"reply": reply})
-
+                return jsonify({"reply": reply, "show_pass_form": False})
         except Exception as e:
-            print(f"⚠️ Groq API Note: {e}")
+            print(f"⚠️ Groq Note: {e}")
 
-    # ==================== बैकअप (Fallback) - सटीक कीवर्ड मैचिंग ====================
-    lower = user_msg.lower()
-# ==================== 1. चारों बटनों और मुख्य टॉपिक्स के जवाब (Top Priority) ====================
-
-    # (A) समय और टाइमिंग (⏰ Timings बटन)
-    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule"]):
-        reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय विजिट करना पसंद करेंगे?"
-        return jsonify({"reply": reply, "show_pass_form": False})
-
-    # (B) पता और लोकेशन (📍 Address बटन)
-    elif any(k in lower for k in ["location", "address", "एड्रेस", "एड्रैस", "लोकेशन", "कहाँ", "पता", "kaha", "landmark", "किधर"]):
-        reply = "एवेंजर्स फिटनेस क्लब का पता है: शॉप नंबर 2, भुकेंद्र बस स्टॉप, पोखरण रोड नंबर 1, उपवन लेक और येउर गेट के पास, ठाणे वेस्ट। आप यहाँ बहुत आसानी से पहुँच सकते हैं।"
-        return jsonify({"reply": reply, "show_pass_form": False})
-
-    # (C) फीस और पैकेज (💰 Fees & Plans बटन)
-    elif any(k in lower for k in ["price", "cost", "fee", "fees", "membership", "plan", "offer", "फीस", "पैसा", "कीमत", "चार्ज", "रेट"]):
-        reply = "हमारा सबसे लोकप्रिय एनुअल स्पेशल प्लान केवल 11,999 रुपये प्रति वर्ष का है, जिसमें बीइंग स्ट्रांग मशीनें और स्टीम बाथ शामिल हैं। मंथली प्लान 2,499 रुपये का है। क्या मैं आपके लिए एक दिन का फ्री गेस्ट पास बुक कर दूँ?"
-        return jsonify({"reply": reply, "show_pass_form": False})
-
-    # (D) मशीनें, सुविधाएं और स्टीम बाथ (🏋️ Equipment बटन)
-    elif any(k in lower for k in ["equipment", "machine", "facility", "facilities", "steam", "मशीन", "मशीनें", "मशीनों", "सुविधा", "ट्रेनर", "स्टीम"]):
-        reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकते हैं।"
-        return jsonify({"reply": reply, "show_pass_form": False})
-
-    # ==================== 2. वॉयस पास बुकिंग और इनकार (Voice Flow) ====================
-
-    # (E) अगर क्लाइंट ने मना किया ("नहीं / No")
-    no_words = ["नहीं", "नही", "nahi", "no", "na", "ना", "नहीं चाहिए", "नहीं बनवाना", "रहने दो", "बाद में"]
-    if any(re.search(r"\b" + re.escape(w) + r"\b", lower) if w.isascii() else w in lower for w in no_words):
-        reply = "कोई बात नहीं! एवेंजर्स फिटनेस क्लब में कॉल करने और बात करने के लिए आपका बहुत-बहुत धन्यवाद। जब भी आपको समय मिले, आप एक बार हमारे जिम में जरूर विजिट कीजिएगा। आपका दिन शुभ हो!"
-        return jsonify({"reply": reply, "show_pass_form": False})
-
-    # (F) अगर क्लाइंट ने पास के लिए "हाँ" या दिन ("कल / परसों") कहा
-    yes_words = ["हाँ", "हां", "haan", "yes", "book", "बुक", "कर दो", "कर दीजिए", "फ्री पास", "गेस्ट पास", "गेट पास", "pass"]
-    day_words = ["कल", "kal", "tomorrow", "parso", "परसों", "narso", "नरसों", "after tomorrow", "आज", "today", "aaj", "आऊंगा", "आऊँगा"]
-
-    has_yes = any(re.search(r"\b" + re.escape(w) + r"\b", lower) if w.isascii() else w in lower for w in yes_words)
-    has_day = any(re.search(r"\b" + re.escape(w) + r"\b", lower) if w.isascii() else w in lower for w in day_words)
-
-    if has_day or has_yes:
-        if "परसों" in lower or "parso" in lower or "after tomorrow" in lower:
-            visit_day = "परसों (Day After Tomorrow)"
-        elif "नरसों" in lower or "narso" in lower:
-            visit_day = "नरसों (In 3 Days)"
-        elif "कल" in lower or "kal" in lower or "tomorrow" in lower:
-            visit_day = "कल (Tomorrow)"
-        elif "आज" in lower or "aaj" in lower or "today" in lower:
-            visit_day = "आज (Today)"
-        else:
-            visit_day = "कल (Tomorrow)"
-
-        reply = f"शानदार! {visit_day} के लिए आपका पास तैयार करने के लिए, कृपया नीचे दिए गए बॉक्स में अपना नाम और मोबाइल नंबर लिखकर सबमिट कर दीजिए।"
-        return jsonify({
-            "reply": reply,
-            "show_pass_form": True,
-            "visit_day": visit_day
-        })
-
-    # (G) सामान्य डिफ़ॉल्ट (Default)
+    # सामान्य डिफ़ॉल्ट
     reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
     return jsonify({"reply": reply, "show_pass_form": False})
 # वॉयस कॉल स्क्रीन से मैनुअल पास बुक करने की API
