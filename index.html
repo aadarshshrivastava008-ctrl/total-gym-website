@@ -1291,10 +1291,12 @@ function askPriyaAI(userQuery) {
   .then(res => res.json())
   .then(data => {
       if (!isCallActive) return;
-      if (data.show_pass_form) {
-      currentVoiceVisitDay = data.visit_day || 'कल (Tomorrow)';
       const pBox = document.getElementById('voicePassBox');
+    if (data.show_pass_form) {
+      currentVoiceVisitDay = data.visit_day || 'कल (Tomorrow)';
       if (pBox) pBox.style.display = 'block';
+    } else {
+      if (pBox) pBox.style.display = 'none';
     }
       const reply = data.reply || "एवेंजर्स फिटनेस क्लब में आपका स्वागत है। आप जब चाहें फ्री जिम टूर के लिए आ सकते हैं।";
       speakPriyaVoice(reply, () => {
