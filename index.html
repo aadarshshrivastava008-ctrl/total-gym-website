@@ -1304,8 +1304,8 @@ function askPriyaAI(userQuery) {
       });
   })
   .catch(err => {
-      if (!isCallActive) return;
-      speakPriyaVoice("हमारा जिम ठाणे वेस्ट में उपवन लेक के पास पोखरण रोड नंबर एक पर है। आप कब विजिट करना चाहेंगे?", () => {
+    if (!isCallActive) return;
+    speakPriyaVoice("एवेंजर्स फिटनेस क्लब का पता है: शॉप नंबर 2, भुकेंद्र बस स्टॉप, पोखरण रोड नंबर 1, उपवन लेक और येउर गेट के पास, ठाणे वेस्ट। आप यहाँ बहुत आसानी से पहुँच सकते हैं।", () => {
           listenToUser();
       });
   });
@@ -1319,59 +1319,49 @@ function askPriyaQuick(query) {
 }
 
 // प्रिया की आवाज़ में बोलना (नेचुरल इंडियन एक्सेंट और ऑटो-माइक अनलॉक)
-// प्रिया की आवाज़ में बोलना (रीस्टार्ट लूप और आधी लाइन कटने से 100% सुरक्षित)
-function speakPriyaVoice(textToSpeak, callback) {
+// प्रिया की आवाज़ बोलने का सुरक्षित फ़ंक्शन (माइक्रोफ़ोन रीस्टार्ट लूप से सुरक्षित)
+function speakPriyaVoice(text, callback) {
   if (!isCallActive) return;
-  isSpeaking = true;
-  clearTimeout(safetySpeechTimer);
 
-  // 1. बोलते समय माइक को तुरंत काटें (abort) ताकि वह स्पीकर से प्रिया की आवाज़ न सुने
-  if (recognition) {
-    try { recognition.abort(); } catch(e) {}
-  }
+  // 1. बोलते समय माइक को तुरंत बंद करें ताकि वह प्रिया की आवाज़ न सुने
+  try {
+    if (recognition) recognition.abort();
+  } catch (e) {}
 
   window.speechSynthesis.cancel();
+  isSpeaking = true;
 
-  // 2. स्क्रीन पर स्टेटस और टेक्स्ट अपडेट करें
+  // 2. स्टेटस को 'बोल रही है' में बदलें
   const statusEl = document.getElementById('callStatusIndicator');
-  if (statusEl) statusEl.innerText = "🗣️ प्रिया बोल रही है...";
-  const subEl = document.getElementById('callLiveSubtitle');
-  if (subEl) subEl.innerText = textToSpeak;
+  if (statusEl) statusEl.innerText = "🔊 प्रिया बोल रही है...";
   const ringEl = document.getElementById('callPulseRing');
   if (ringEl) ringEl.style.borderColor = "#e5a93c";
 
-  // 3. सिंबल और इमोजी हटाकर साफ़ टेक्स्ट बनाना
-  const cleanText = textToSpeak.replace(/[|•★📞💰⏰📍🏋️🛡️🎟️]/g, '').trim();
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.lang = 'hi-IN'; // शुद्ध भारतीय हिंदी भाषा एक्सेंट
+  // 3. स्क्रीन पर पूरा टेक्स्ट दिखाएं
+  const sub = document.getElementById('callLiveSubtitle');
+  if (sub) sub.innerText = text;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'hi-IN';
   utterance.rate = 1.0;
-  utterance.pitch = 1.05;
 
-  if (!indianVoice) loadIndianVoices();
-  if (indianVoice) utterance.voice = indianVoice;
-
-  let hasEnded = false;
-  function finishSpeaking() {
-    if (hasEnded) return;
-    hasEnded = true;
-    clearTimeout(safetySpeechTimer);
+  // वाक्य पूरा होने पर ही माइक दोबारा चालू करें
+  utterance.onend = () => {
     isSpeaking = false;
-
-    // वाक्य पूरा होने पर 500ms का शांत ब्रेक, फिर माइक चालू करें
     setTimeout(() => {
-      if (callback && isCallActive && !isSpeaking) {
+      if (isCallActive && !isSpeaking && typeof callback === 'function') {
         callback();
       }
-    }, 500);
-  }
+    }, 400); // 400ms का सुरक्षित ब्रेक ताकि कोई गूंज न बचे
+  };
 
-  utterance.onend = finishSpeaking;
-  utterance.onerror = finishSpeaking;
+  utterance.onerror = () => {
+    isSpeaking = false;
+    if (isCallActive && typeof callback === 'function') {
+      callback();
+    }
+  };
 
-  // 4. सुरक्षित टाइमर: 30 सेकंड का बड़ा टाइम ताकि पूरा वाक्य बोले बिना कभी न कटे
-  safetySpeechTimer = setTimeout(finishSpeaking, 30000);
-
-  window.activeUtterance = utterance; // मेमोरी लीक रोकने के लिए
   window.speechSynthesis.speak(utterance);
 }
 
