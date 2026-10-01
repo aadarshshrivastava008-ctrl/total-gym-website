@@ -1319,23 +1319,29 @@ function askPriyaQuick(query) {
 }
 
 // प्रिया की आवाज़ में बोलना (नेचुरल इंडियन एक्सेंट और ऑटो-माइक अनलॉक)
+// प्रिया की आवाज़ में बोलना (रीस्टार्ट लूप और आधी लाइन कटने से 100% सुरक्षित)
 function speakPriyaVoice(textToSpeak, callback) {
   if (!isCallActive) return;
   isSpeaking = true;
   clearTimeout(safetySpeechTimer);
 
+  // 1. बोलते समय माइक को तुरंत काटें (abort) ताकि वह स्पीकर से प्रिया की आवाज़ न सुने
   if (recognition) {
-      try { recognition.stop(); } catch(e){}
+    try { recognition.abort(); } catch(e) {}
   }
-
-  document.getElementById('callStatusIndicator').innerText = "🗣️ प्रिया बोल रही है...";
-  document.getElementById('callLiveSubtitle').innerText = textToSpeak;
-  document.getElementById('callPulseRing').style.borderColor = "#e5a93c";
 
   window.speechSynthesis.cancel();
 
-  // सिंबल और इमोजी हटाकर साफ़ टेक्स्ट बोलना
-  const cleanText = textToSpeak.replace(/[•★📞📱💰⏰📍🏋️🛡️]/g, '').trim();
+  // 2. स्क्रीन पर स्टेटस और टेक्स्ट अपडेट करें
+  const statusEl = document.getElementById('callStatusIndicator');
+  if (statusEl) statusEl.innerText = "🗣️ प्रिया बोल रही है...";
+  const subEl = document.getElementById('callLiveSubtitle');
+  if (subEl) subEl.innerText = textToSpeak;
+  const ringEl = document.getElementById('callPulseRing');
+  if (ringEl) ringEl.style.borderColor = "#e5a93c";
+
+  // 3. सिंबल और इमोजी हटाकर साफ़ टेक्स्ट बनाना
+  const cleanText = textToSpeak.replace(/[|•★📞💰⏰📍🏋️🛡️🎟️]/g, '').trim();
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = 'hi-IN'; // शुद्ध भारतीय हिंदी भाषा एक्सेंट
   utterance.rate = 1.0;
@@ -1346,19 +1352,24 @@ function speakPriyaVoice(textToSpeak, callback) {
 
   let hasEnded = false;
   function finishSpeaking() {
-      if (hasEnded) return;
-      hasEnded = true;
-      clearTimeout(safetySpeechTimer);
-      isSpeaking = false;
-      if (callback && isCallActive) callback();
+    if (hasEnded) return;
+    hasEnded = true;
+    clearTimeout(safetySpeechTimer);
+    isSpeaking = false;
+
+    // वाक्य पूरा होने पर 500ms का शांत ब्रेक, फिर माइक चालू करें
+    setTimeout(() => {
+      if (callback && isCallActive && !isSpeaking) {
+        callback();
+      }
+    }, 500);
   }
 
   utterance.onend = finishSpeaking;
   utterance.onerror = finishSpeaking;
 
-  // सेफ़्टी टाइमर: Chrome का बग रोकने के लिए
-  const estimatedTimeMs = Math.max(3000, (cleanText.length / 10) * 1000);
-  safetySpeechTimer = setTimeout(finishSpeaking, estimatedTimeMs);
+  // 4. सुरक्षित टाइमर: 30 सेकंड का बड़ा टाइम ताकि पूरा वाक्य बोले बिना कभी न कटे
+  safetySpeechTimer = setTimeout(finishSpeaking, 30000);
 
   window.activeUtterance = utterance; // मेमोरी लीक रोकने के लिए
   window.speechSynthesis.speak(utterance);
