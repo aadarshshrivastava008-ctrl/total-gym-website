@@ -70,11 +70,11 @@ def check_client_demo_license():
             <div class="card">
                 <div class="icon">🔒</div>
                 <h1>Demo Preview Expired</h1>
-                <p>Avengers Fitness Club वेबसाइट की 13-दिन की डेमो ट्रायल अवधि पूरी हो चुकी है।</p>
-                <p>वेबसाइट और AI सिस्टम का <strong>पूर्ण लाइफटाइम एक्सेस</strong> एक्टिवेट कराने के लिए कृपया मुख्य डेवलपर से संपर्क करें।</p>
+                <p>Avengers Fitness Club Website की 13-days की demo trial अवधि पूरी हो चुकी है।</p>
+                <p>Website और AI System का <strong>Complete lifetime access</strong> Activate कराने के लिए कृपया main developer से संपर्क करें।</p>
                 <div class="contact-box">
                     <p style="margin:0; font-size:12px; color:#aaa;">Official Web Developer:</p>
-                    <span>Adarsh Shrivastava</span>
+                    <span>Adarsh Shrivastava (Gmail-aadarshshrivastava008@gmail.com</span>
                 </div>
             </div>
         </body>
