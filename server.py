@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template_string, session, redi
 import sqlite3
 import datetime
 import os
+import re
 import random
 import time
 import threading
@@ -193,8 +194,6 @@ def serve_file(filename):
 # ==================== प्रिया AI चैटबॉट और वॉयस कॉल API ====================
 # चैटबॉट और वॉयस कॉल API (Top Priority Lead & Pass Flow)
 @app.route("/api/chat", methods=["POST"])
-# चैटबॉट और वॉयस कॉल API (Top Priority Lead & Pass Flow)
-@app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
     user_msg = data.get("message", "").strip()
@@ -203,7 +202,6 @@ def chat():
         return jsonify({"reply": "नमस्ते! मैं प्रिया बोल रही हूँ। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"}), 200
 
     lower = user_msg.lower()
-    import re
 
     # 1. अगर क्लाइंट ने मना किया ("नहीं / No")
     no_phrases = ["नहीं", "नही", "nahi", "nahin", "नहीं चाहिए", "नहीं बनवाना", "रहने दो", "बाद में", "not now"]
@@ -219,26 +217,30 @@ def chat():
         "फ्री पास", "free pass"
     ]
     has_booking = any(b in lower for b in pass_booking_triggers)
-    has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or ("हाँ" in lower) or ("हां" in lower)
+# नई लाइन (New Code):
+has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or bool(re.search(r"(?:^|[\s,।!?])(हाँ|हां)(?:$|[\s,।!?])", lower))    has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or ("हाँ" in lower) or ("हां" in lower)
 
     # जब क्लाइंट पास बुक करने या आने का दिन बोले -> सीधे दोनों इनपुट बॉक्स दिखाएं
     if has_booking or has_pure_yes:
-        if "after tomorrow" in lower or "परसों" in lower or "parso" in lower:
-            visit_day = "परसों (Day After Tomorrow)"
-        elif "नरसों" in lower or "narso" in lower:
-            visit_day = "नरसों (In 3 Days)"
-        elif "सुबह" in lower or "morning" in lower:
-            visit_day = "सुबह (Morning)"
-        elif "शाम" in lower or "evening" in lower:
-            visit_day = "शाम (Evening)"
-        elif "दोपहर" in lower or "afternoon" in lower:
-            visit_day = "दोपहर (Afternoon)"
-        elif "कल" in lower or "kal" in lower or "tomorrow" in lower:
-            visit_day = "कल (Tomorrow)"
-        elif "आज" in lower or "aaj" in lower or "today" in lower:
-            visit_day = "आज (Today)"
-        else:
-            visit_day = "कल (Tomorrow)"
+# 1. दिन (Day) पहचानना
+    if "after tomorrow" in lower or "परसों" in lower or "parso" in lower:
+        day = "परसों (Day After Tomorrow)"
+    elif "नरसों" in lower or "narso" in lower:
+        day = "नरसों (In 3 Days)"
+    elif "आज" in lower or "aaj" in lower or "today" in lower:
+        day = "आज (Today)"
+    else:
+        day = "कल (Tomorrow)"
+
+    # 2. समय (Time) पहचानना और दिन के साथ जोड़ना
+    if "सुबह" in lower or "morning" in lower:
+        visit_day = f"{day} सुबह"
+    elif "शाम" in lower or "evening" in lower:
+        visit_day = f"{day} शाम"
+    elif "दोपहर" in lower or "afternoon" in lower:
+        visit_day = f"{day} दोपहर"
+    else:
+        visit_day = day
 
         reply = f"शानदार! {visit_day} के लिए आपका पास तैयार करने के लिए, कृपया नीचे दिए गए बॉक्स में अपना नाम और मोबाइल नंबर लिखकर सबमिट कर दीजिए।"
         return jsonify({
@@ -247,26 +249,27 @@ def chat():
             "visit_day": visit_day
         })
 
-    # 3. पसंदीदा समय का जवाब (Morning, Afternoon, Evening Response)
+# 3. समय और टाइमिंग (Timing सवाल - पहले चेक होगा)
+    timing_words = ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule", "बजे"]
+    if any(k in lower for k in timing_words):
+        reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप अपने वर्कआउट के लिए कभी भी आ सकते हैं!"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 4. पसंदीदा समय का जवाब (Morning, Afternoon, Evening Motivation)
     morning_words = ["morning", "सुबह", "मॉर्निंग", "subah", "saverey", "savere"]
     afternoon_words = ["afternoon", "दोपहर", "दुपहर", "dopahar"]
     evening_words = ["evening", "शाम", "रात", "इवनिंग", "shaam", "sham", "night"]
 
     if any(k in lower for k in morning_words):
-        reply = "बहुत बढ़िया! सुबह का समय वर्कआउट के लिए सबसे बेस्ट होता है, उस समय पूरा जिम फ्रेश एनर्जी और शानदार पॉजिटिव वाइब्स से भरा होता है। क्या मैं आपके लिए सुबह का 1-दिन का फ्री गेट पास बुक कर दूँ?"
+        reply = "बहुत बढ़िया! सुबह का समय वर्कआउट के लिए सबसे बेस्ट होता है, उस समय पूरा जिम फ्रेश एनर्जी और शानदार पॉजिटिव वाइब्स से भरा होता है। क्या आप कल सुबह का 1-डे फ्री गेस्ट पास बनवाना चाहते हैं?"
         return jsonify({"reply": reply, "show_pass_form": False})
 
     elif any(k in lower for k in afternoon_words):
-        reply = "शानदार चॉइस! दोपहर के समय जिम में काफी शांत और रिलैक्स माहौल रहता है, जिससे आप बिना किसी भीड़ के सभी Being Strong मशीनों और स्टीम बाथ का भरपूर मज़ा ले सकते हैं। क्या मैं आपके लिए दोपहर का फ्री पास बुक कर दूँ?"
+        reply = "शानदार चॉइस! दोपहर के समय जिम में काफी शांत और रिलैक्स माहौल रहता है, जिससे आप बिना किसी भीड़ के सभी Being Strong मशीनों पर आसानी से वर्कआउट कर सकते हैं।"
         return jsonify({"reply": reply, "show_pass_form": False})
 
     elif any(k in lower for k in evening_words):
-        reply = "अरे वाह! शाम का समय दिनभर की थकान मिटाने और एनर्जेटिक वर्कआउट के लिए एकदम परफेक्ट है। उस समय हमारे जिम में बहुत ही मोटिवेटिंग और एनर्जेटिक माहौल रहता है। क्या मैं आपके लिए शाम का फ्री पास बुक कर दूँ?"
-        return jsonify({"reply": reply, "show_pass_form": False})
-
-    # 4. समय और टाइमिंग (Timing बटन / सवाल)
-    if any(k in lower for k in ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule"]):
-        reply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय विजिट करना पसंद करेंगे?"
+        reply = "अरे वाह! शाम का समय दिनभर की थकान मिटाने और एनर्जेटिक वर्कआउट के लिए एकदम परफेक्ट है। उस समय हमारे जिम में बहुत ही मोटिवेटिंग वाइब होती है।"
         return jsonify({"reply": reply, "show_pass_form": False})
 
     # 5. पता और लोकेशन (Address बटन / सवाल)
@@ -285,7 +288,8 @@ def chat():
         return jsonify({"reply": reply, "show_pass_form": False})
 
     # 8. अन्य सामान्य सवालों के लिए Groq AI
-    api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
+# यह नई लाइन है (New Code):
+api_key = os.environ.get("GROQ_API_KEY", "").strip()
     if api_key:
         try:
             system_instructions = (
