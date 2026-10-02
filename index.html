@@ -1311,57 +1311,134 @@ function askPriyaAI(userQuery) {
   });
 }
 
-// क्विक बटन क्लिक होने पर
+// ==================== क्विक बटनों और प्रिया की आवाज़ का बुलेटप्रूफ़ सिस्टम ====================
+let currentSpeechId = 0;       // हर नए वाक्य के लिए यूनिक आईडी (ताकि पुराने कैंसल वाक्य माइक न छेड़ें)
+let lastQuickClickTime = 0;    // बार-बार बटन दबाने (Spam Click) से बचाव (Debounce)
+
+// 1. क्विक बटन क्लिक होने पर (Instant, No Loop, No Restart)
 function askPriyaQuick(query) {
   if (!isCallActive) return;
-  document.getElementById('callLiveSubtitle').innerText = `आपने पूछा: "${query}"`;
+
+  // अगर किसी ने 800 मिलीसेकंड के अंदर दोबारा बटन दबाया, तो उसे नज़रअंदाज़ करें (Debounce)
+  const now = Date.now();
+  if (now - lastQuickClickTime < 800) {
+    return;
+  }
+  lastQuickClickTime = now;
+
+  // पिछला कोई भी भाषण और माइक तुरंत पूर्णतः रोकें
+  currentSpeechId++;
+  window.speechSynthesis.cancel();
+  if (recognition) {
+    try { recognition.abort(); } catch (e) {}
+  }
+  isSpeaking = true;
+
+  const lowerQ = query.toLowerCase();
+  const pBox = document.getElementById('voicePassBox');
+
+  // 1. पता और लोकेशन (Address बटन)
+  if (lowerQ.includes('address') || lowerQ.includes('location')) {
+    if (pBox) pBox.style.display = 'none';
+    const addressReply = "एवेंजर्स फिटनेस क्लब का पता है: शॉप नंबर 2, भुकेंद्र बस स्टॉप, पोखरण रोड नंबर 1, उपवन लेक और येउर गेट के पास, ठाणे वेस्ट। आप यहाँ बहुत आसानी से पहुँच सकते हैं।";
+    speakPriyaVoice(addressReply, () => { listenToUser(); });
+    return;
+  }
+
+  // 2. समय और टाइमिंग (Timing बटन)
+  if (lowerQ.includes('timing') || lowerQ.includes('time')) {
+    if (pBox) pBox.style.display = 'none';
+    const timingReply = "एवेंजर्स फिटनेस क्लब सोमवार से शनिवार सुबह 5:30 से रात 10:45 तक और रविवार को सुबह 7 से दोपहर 2 बजे तक खुला रहता है। आप किस समय विजिट करना पसंद करेंगे?";
+    speakPriyaVoice(timingReply, () => { listenToUser(); });
+    return;
+  }
+
+  // 3. फीस और पैकेज (Fees बटन)
+  if (lowerQ.includes('fee') || lowerQ.includes('price')) {
+    if (pBox) pBox.style.display = 'none';
+    const feeReply = "हमारा सबसे लोकप्रिय एनुअल स्पेशल प्लान केवल 11,999 रुपये प्रति वर्ष का है, जिसमें बीइंग स्ट्रांग मशीनें और स्टीम बाथ शामिल हैं। मंथली प्लान 2,499 रुपये का है। क्या मैं आपके लिए एक दिन का फ्री गेस्ट पास बुक कर दूँ?";
+    speakPriyaVoice(feeReply, () => { listenToUser(); });
+    return;
+  }
+
+  // 4. मशीनें और स्टीम (Equipment बटन)
+  if (lowerQ.includes('machine') || lowerQ.includes('steam') || lowerQ.includes('equipment')) {
+    if (pBox) pBox.style.display = 'none';
+    const equipReply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकते हैं।";
+    speakPriyaVoice(equipReply, () => { listenToUser(); });
+    return;
+  }
+
+  // अन्य सभी सवालों के लिए AI कॉल करें
   askPriyaAI(query);
 }
 
-// प्रिया की आवाज़ में बोलना (नेचुरल इंडियन एक्सेंट और ऑटो-माइक अनलॉक)
-// प्रिया की आवाज़ बोलने का सुरक्षित फ़ंक्शन (माइक्रोफ़ोन रीस्टार्ट लूप से सुरक्षित)
-function speakPriyaVoice(text, callback) {
+// 2. प्रिया की आवाज़ में बोलना (100% सुरक्षित: नो रीस्टार्ट, नो माइक फीडबैक)
+function speakPriyaVoice(textToSpeak, callback) {
   if (!isCallActive) return;
 
-  // 1. बोलते समय माइक को तुरंत बंद करें ताकि वह प्रिया की आवाज़ न सुने
-  try {
-    if (recognition) recognition.abort();
-  } catch (e) {}
+  // इस वाक्य के लिए एक नया आईडी बनाएं
+  const thisSpeechId = ++currentSpeechId;
+  clearTimeout(safetySpeechTimer);
+
+  // माइक को तुरंत काटें ताकि वह स्पीकर से प्रिया की आवाज़ न सुने
+  if (recognition) {
+    try { recognition.abort(); } catch (e) {}
+  }
 
   window.speechSynthesis.cancel();
   isSpeaking = true;
 
-  // 2. स्टेटस को 'बोल रही है' में बदलें
+  // स्क्रीन पर स्टेटस और टेक्स्ट अपडेट करें
   const statusEl = document.getElementById('callStatusIndicator');
-  if (statusEl) statusEl.innerText = "🔊 प्रिया बोल रही है...";
+  if (statusEl) statusEl.innerText = "🗣️ प्रिया बोल रही है...";
+  const subEl = document.getElementById('callLiveSubtitle');
+  if (subEl) subEl.innerText = textToSpeak;
   const ringEl = document.getElementById('callPulseRing');
   if (ringEl) ringEl.style.borderColor = "#e5a93c";
 
-  // 3. स्क्रीन पर पूरा टेक्स्ट दिखाएं
-  const sub = document.getElementById('callLiveSubtitle');
-  if (sub) sub.innerText = text;
-
-  const utterance = new SpeechSynthesisUtterance(text);
+  // सिंबल और इमोजी हटाकर साफ़ टेक्स्ट बनाना
+  const cleanText = textToSpeak.replace(/[|•★📞💰⏰📍🏋️🛡️🎟️]/g, '').trim();
+  const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = 'hi-IN';
   utterance.rate = 1.0;
+  utterance.pitch = 1.05;
 
-  // वाक्य पूरा होने पर ही माइक दोबारा चालू करें
-  utterance.onend = () => {
+  if (!indianVoice) loadIndianVoices();
+  if (indianVoice) utterance.voice = indianVoice;
+
+  let hasEnded = false;
+  function finishSpeaking() {
+    if (hasEnded) return;
+    // अगर कोई नया वाक्य शुरू हो चुका है, तो पुराने वाक्य का टाइमर रद्द करें
+    if (thisSpeechId !== currentSpeechId) return;
+    hasEnded = true;
+    clearTimeout(safetySpeechTimer);
     isSpeaking = false;
+
+    // वाक्य पूरा होने पर 500ms का शांत ब्रेक, फिर माइक चालू करें
     setTimeout(() => {
-      if (isCallActive && !isSpeaking && typeof callback === 'function') {
+      // दुबारा जांचें कि इस बीच कोई नया वाक्य या बटन तो नहीं दबा
+      if (thisSpeechId === currentSpeechId && callback && isCallActive && !isSpeaking) {
         callback();
       }
-    }, 400); // 400ms का सुरक्षित ब्रेक ताकि कोई गूंज न बचे
-  };
+    }, 500);
+  }
 
-  utterance.onerror = () => {
-    isSpeaking = false;
-    if (isCallActive && typeof callback === 'function') {
-      callback();
+  utterance.onend = finishSpeaking;
+
+  // यदि वाक्य को बीच में कैंसिल किया गया हो (e.g. नया बटन दबाने पर), तो माइक चालू न करें!
+  utterance.onerror = (event) => {
+    if (event && (event.error === 'canceled' || event.error === 'interrupted')) {
+      return; // कैंसल होने पर माइक चालू करने वाला फ़ंक्शन न चलाएं!
     }
+    finishSpeaking();
   };
 
+  // सुरक्षित टाइमर: 30 सेकंड
+  safetySpeechTimer = setTimeout(finishSpeaking, 30000);
+
+  window.activeUtterance = utterance;
   window.speechSynthesis.speak(utterance);
 }
 
