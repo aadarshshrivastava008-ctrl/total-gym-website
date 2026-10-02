@@ -902,6 +902,88 @@
         msgs.scrollTop = msgs.scrollHeight;
     }
 
+    // इन-चैट फ्री पास कार्ड (Interactive Lead Generation Card)
+    function appendPassCard(visitDay) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'chat-msg msg-bot';
+        cardDiv.style.padding = '0';
+        cardDiv.style.background = 'transparent';
+        cardDiv.style.maxWidth = '90%';
+
+        cardDiv.innerHTML = `
+            <div style="background: linear-gradient(145deg, #1c1a17, #11100e); border: 1px solid #d4af37; border-radius: 12px; padding: 14px; margin-top: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); font-family: inherit;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="color: #e5c07b; font-weight: bold; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">🎟️ 1-Day Free Guest Pass</span>
+                    <span style="background: rgba(212,175,55,0.2); color: #ffd700; font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.4); font-weight: bold;">FREE</span>
+                </div>
+                <div style="color: #aaa; font-size: 12px; margin-bottom: 10px;">
+                    विज़िट दिन: <span style="color: #fff; font-weight: bold;">${visitDay}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <input type="text" class="card-name" placeholder="आपका नाम (Your Name)" style="width: 100%; padding: 8px 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box; outline: none;">
+                    <input type="tel" class="card-phone" placeholder="मोबाइल नंबर (10 Digit Mobile)" maxlength="10" style="width: 100%; padding: 8px 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box; outline: none;">
+                    <button class="card-submit-btn" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #d4af37, #aa8010); color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; transition: 0.2s;">
+                        ⚡ तुरंत फ़्री पास बुक करें
+                    </button>
+                    <div class="card-err" style="color: #ff6b6b; font-size: 11px; display: none; text-align: center;"></div>
+                </div>
+            </div>
+        `;
+
+        const nameInput = cardDiv.querySelector('.card-name');
+        const phoneInput = cardDiv.querySelector('.card-phone');
+        const submitBtn = cardDiv.querySelector('.card-submit-btn');
+        const errDiv = cardDiv.querySelector('.card-err');
+
+        submitBtn.addEventListener('click', async () => {
+            const nameVal = nameInput.value.trim();
+            const phoneVal = phoneInput.value.trim();
+
+            if (!nameVal) {
+                errDiv.innerText = "कृपया अपना नाम लिखें।";
+                errDiv.style.display = "block";
+                return;
+            }
+            if (!phoneVal || phoneVal.length < 10) {
+                errDiv.innerText = "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।";
+                errDiv.style.display = "block";
+                return;
+            }
+
+            errDiv.style.display = "none";
+            submitBtn.disabled = true;
+            submitBtn.innerText = "पास बुक हो रहा है...";
+
+            try {
+                const bookRes = await fetch('/api/book-voice-pass', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nameVal,
+                        phone: phoneVal,
+                        visit_day: visitDay
+                    })
+                });
+
+                cardDiv.innerHTML = `
+                    <div style="background: linear-gradient(145deg, #0f2415, #08140c); border: 1px solid #22c55e; border-radius: 12px; padding: 14px; margin-top: 6px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
+                        <div style="font-size: 24px; margin-bottom: 4px;">🎉</div>
+                        <div style="color: #4ade80; font-weight: bold; font-size: 14px; margin-bottom: 4px;">पास सफलतापूर्वक बुक हो गया!</div>
+                        <div style="color: #ddd; font-size: 12px;">नमस्ते <b>${nameVal}</b>, <b>${visitDay}</b> को एवेंजर्स फिटनेस क्लब में आपका स्वागत है!</div>
+                    </div>
+                `;
+                msgs.scrollTop = msgs.scrollHeight;
+            } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "⚡ तुरंत फ़्री पास बुक करें";
+                errDiv.innerText = "बुकिंग में समस्या आई। पुनः प्रयास करें।";
+                errDiv.style.display = "block";
+            }
+        });
+
+        msgs.appendChild(cardDiv);
+        msgs.scrollTop = msgs.scrollHeight;
+    }
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = input.value.trim();
@@ -925,6 +1007,9 @@
             const data = await res.json();
             loadingDiv.remove();
             appendMessage(data.reply || "Sorry, I couldn't process that.", false);
+            if (data.show_pass_form) {
+            appendPassCard(data.visit_day || "कल (Tomorrow)");
+        }
         } catch (err) {
             loadingDiv.remove();
             appendMessage("नेटवर्क समस्या। कृपया पुनः प्रयास करें।", false);
