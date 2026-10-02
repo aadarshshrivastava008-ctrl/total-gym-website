@@ -20,6 +20,67 @@ except ImportError:
 
 app = Flask(__name__)
 app.secret_key = "avengers_fitness_club_secret_key_2026"
+# ==============================================================================
+# 🔒 13-DAY CLIENT DEMO LICENSE LOCK (DEVELOPER: ADARSH SHRIVASTAVA)
+# Render Environment Variable 'DEMO_MODE' से कंट्रोल होता है:
+# 1. 'ACTIVE'  -> 16 अक्टूबर 2026 तक खुला, फिर ऑटोमैटिक लॉक
+# 2. 'OFF'     -> लाइफटाइम परमानेंट अनलॉक (पेमेंट मिलने के बाद)
+# 3. 'LOCKED'  -> तुरंत किसी भी समय वेबसाइट बंद करने के लिए
+# ==============================================================================
+DEMO_EXPIRY_DATE = datetime.date(2026, 10, 16)
+
+@app.before_request
+def check_client_demo_license():
+    # एडमिन लॉगिन और जरूरी फाइल्स पर ताला नहीं लगेगा
+    if request.path.startswith("/admin") or request.path.startswith("/static"):
+        return None
+
+    # आदर्श की सीक्रेट मास्टर चाबी (?unlock=adarsh)
+    if request.args.get("unlock") == "adarsh":
+        session["dev_unlocked"] = True
+    if session.get("dev_unlocked"):
+        return None
+
+    # Render से मोड चेक करना (डिफ़ॉल्ट 'ACTIVE' रहेगा)
+    mode = os.environ.get("DEMO_MODE", "ACTIVE").strip().upper()
+
+    if mode in ["OFF", "UNLOCKED", "LIFETIME"]:
+        return None
+
+    today = datetime.date.today()
+    if mode == "LOCKED" or (mode == "ACTIVE" and today > DEMO_EXPIRY_DATE):
+        lock_html = """
+        <!DOCTYPE html>
+        <html lang="hi">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Demo Access Expired | Avengers Fitness Club</title>
+            <style>
+                body { background: #080808; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                .card { background: linear-gradient(145deg, #1c1a17, #100f0d); border: 2px solid #d4af37; border-radius: 20px; padding: 40px 25px; text-align: center; max-width: 460px; width: 100%; box-shadow: 0 10px 40px rgba(212,175,55,0.25); }
+                .icon { font-size: 54px; margin-bottom: 12px; }
+                h1 { color: #e5c07b; font-size: 22px; margin-bottom: 12px; letter-spacing: 0.8px; text-transform: uppercase; }
+                p { color: #ccc; font-size: 14px; line-height: 1.6; margin: 0 0 16px; }
+                .contact-box { background: rgba(212,175,55,0.1); border: 1px dashed #d4af37; border-radius: 12px; padding: 14px; margin-top: 20px; }
+                .contact-box span { color: #ffd700; font-weight: bold; font-size: 16px; display: block; margin-top: 4px; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="icon">🔒</div>
+                <h1>Demo Preview Expired</h1>
+                <p>Avengers Fitness Club वेबसाइट की 13-दिन की डेमो ट्रायल अवधि पूरी हो चुकी है।</p>
+                <p>वेबसाइट और AI सिस्टम का <strong>पूर्ण लाइफटाइम एक्सेस</strong> एक्टिवेट कराने के लिए कृपया मुख्य डेवलपर से संपर्क करें।</p>
+                <div class="contact-box">
+                    <p style="margin:0; font-size:12px; color:#aaa;">Official Web Developer:</p>
+                    <span>Adarsh Shrivastava</span>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        return render_template_string(lock_html), 403
 
 # .env फ़ाइल से क्रेडेंशियल्स लोड करना
 if os.path.exists(".env"):
