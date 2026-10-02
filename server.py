@@ -35,8 +35,8 @@ def check_client_demo_license():
     if request.path.startswith("/admin") or request.path.startswith("/static"):
         return None
 
-    # आदर्श की सीक्रेट मास्टर चाबी (?unlock=adarsh)
-    if request.args.get("unlock") == "adarsh":
+    # आदर्श की सीक्रेट मास्टर चाबी (?unlock=somu@69)
+    if request.args.get("unlock") == "somu@69":
         session["dev_unlocked"] = True
     if session.get("dev_unlocked"):
         return None
