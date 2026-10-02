@@ -220,34 +220,34 @@ def chat():
 # नई लाइन (New Code):
     has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or bool(re.search(r"(?:^|[\s,।!?])(हाँ|हां)(?:$|[\s,।!?])", lower))
 
-    # जब क्लाइंट पास बुक करने या आने का दिन बोले -> सीधे दोनों इनपुट बॉक्स दिखाएं
+# जब क्लाइंट पास बुक करने या आने का दिन बोले -> सीधे दोनों इनपुट बॉक्स दिखाएं
     if has_booking or has_pure_yes:
-# 1. दिन (Day) पहचानना
-    if "after tomorrow" in lower or "परसों" in lower or "parso" in lower:
-        day = "परसों (Day After Tomorrow)"
-    elif "नरसों" in lower or "narso" in lower:
-        day = "नरसों (In 3 Days)"
-    elif "आज" in lower or "aaj" in lower or "today" in lower:
-        day = "आज (Today)"
-    else:
-        day = "कल (Tomorrow)"
+        # 1. दिन (Day) पहचानना
+        if "after tomorrow" in lower or "परसों" in lower or "parso" in lower:
+            day = "परसों (Day After Tomorrow)"
+        elif "नरसों" in lower or "narso" in lower:
+            day = "नरसों (In 3 Days)"
+        elif "आज" in lower or "aaj" in lower or "today" in lower:
+            day = "आज (Today)"
+        else:
+            day = "कल (Tomorrow)"
 
-    # 2. समय (Time) पहचानना और दिन के साथ जोड़ना
-    if "सुबह" in lower or "morning" in lower:
-        visit_day = f"{day} सुबह"
-    elif "शाम" in lower or "evening" in lower:
-        visit_day = f"{day} शाम"
-    elif "दोपहर" in lower or "afternoon" in lower:
-        visit_day = f"{day} दोपहर"
-    else:
-        visit_day = day
+        # 2. समय (Time) पहचानना और दिन के साथ जोड़ना
+        if "सुबह" in lower or "morning" in lower:
+            visit_day = f"{day} सुबह"
+        elif "शाम" in lower or "evening" in lower:
+            visit_day = f"{day} शाम"
+        elif "दोपहर" in lower or "afternoon" in lower:
+            visit_day = f"{day} दोपहर"
+        else:
+            visit_day = day
 
-        reply = f"शानदार! {visit_day} के लिए आपका पास तैयार करने के लिए, कृपया नीचे दिए गए बॉक्स में अपना नाम और मोबाइल नंबर लिखकर सबमिट कर दीजिए।"
-        return jsonify({
-            "reply": reply,
-            "show_pass_form": True,
-            "visit_day": visit_day
-        })
+            reply = f"शानदार! {visit_day} के लिए आपका पास तैयार करने के लिए, कृपया नीचे दिए गए बॉक्स में अपना नाम और मोबाइल नंबर लिखकर सबमिट कर दीजिए।"
+            return jsonify({
+                "reply": reply,
+                "show_pass_form": True,
+                "visit_day": visit_day
+            })
 
 # 3. समय और टाइमिंग (Timing सवाल - पहले चेक होगा)
     timing_words = ["timing", "time", "open", "समय", "घंटे", "टाइम", "खुलता", "टाइमिंग", "schedule", "बजे"]
