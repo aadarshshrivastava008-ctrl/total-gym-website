@@ -218,7 +218,7 @@ def chat():
     ]
     has_booking = any(b in lower for b in pass_booking_triggers)
 # नई लाइन (New Code):
-has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or bool(re.search(r"(?:^|[\s,।!?])(हाँ|हां)(?:$|[\s,।!?])", lower))    has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or ("हाँ" in lower) or ("हां" in lower)
+has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or bool(re.search(r"(?:^|[\s,।!?])(हाँ|हां)(?:$|[\s,।!?])", lower))
 
     # जब क्लाइंट पास बुक करने या आने का दिन बोले -> सीधे दोनों इनपुट बॉक्स दिखाएं
     if has_booking or has_pure_yes:
@@ -288,8 +288,7 @@ has_pure_yes = bool(re.search(r"\b(yes|haan|ha)\b", lower)) or bool(re.search(r"
         return jsonify({"reply": reply, "show_pass_form": False})
 
     # 8. अन्य सामान्य सवालों के लिए Groq AI
-# यह नई लाइन है (New Code):
-api_key = os.environ.get("GROQ_API_KEY", "").strip()
+    api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
     if api_key:
         try:
             system_instructions = (
