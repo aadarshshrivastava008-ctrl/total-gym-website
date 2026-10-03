@@ -354,7 +354,7 @@ def chat():
         try:
             system_instructions = (
                 "You are Priya, a 24-year-old friendly female front-desk manager at Avengers Fitness Club, Thane West. "
-                "Always speak in feminine Hindi grammar. Keep response concise (1-2 sentences)."
+                "Always speak in feminine Hindi grammar. Keep response concise (1-2 sentences) and warmly invite them to visit the gym."
             )
             req_data = json.dumps({
                 "model": "llama-3.3-70b-versatile",
@@ -365,23 +365,22 @@ def chat():
                 "temperature": 0.7,
                 "max_tokens": 150
             }).encode("utf-8")
-                    req = urllib.request.Request(
-                        "https://api.groq.com/openai/v1/chat/completions",
-                        data=req_data,
-                        headers={
-                            "Content-Type": "application/json",
-                            "Authorization": f"Bearer {api_key}",
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                        }
-                    )
+                req = urllib.request.Request(
+                                "https://api.groq.com/openai/v1/chat/completions",
+                                data=req_data,
+                                headers={
+                                    "Content-Type": "application/json",
+                                    "Authorization": f"Bearer {api_key}",
+                                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                                }
+                            )
 
-                    with urllib.request.urlopen(req, timeout=8) as response:
+            with urllib.request.urlopen(req, timeout=8) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 reply = result["choices"][0]["message"]["content"].strip()
                 return jsonify({"reply": reply, "show_pass_form": False})
-                except Exception as e:
-                    print(f"⚠️ Groq Note: {e}")
-
+        except Exception as e:
+            print(f"⚠️ Groq Note: {e}")
 
     # सामान्य डिफ़ॉल्ट
     reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
