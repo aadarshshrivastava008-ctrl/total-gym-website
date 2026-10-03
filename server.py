@@ -348,7 +348,47 @@ def chat():
         reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकते हैं।"
         return jsonify({"reply": reply, "show_pass_form": False})
 
-# 8. अन्य सामान्य सवालों के लिए Groq AI
+# 8. पहली बार जिम आने वाले (Beginner)
+    if any(k in lower for k in ["पहली बार", "pehli baar", "pahli baar", "first time", "beginner", "कर पाऊंगा", "कर पाउँगा", "कर सकती हूँ", "नया हूँ", "नया हु", "start"]):
+        reply = "बिल्कुल! आपको घबराने की ज़रूरत नहीं है। हमारे सर्टिफाइड ट्रेनर्स शुरुआत में आपको मशीनों का सही इस्तेमाल और बेसिक वर्कआउट खुद सिखाएंगे।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 9. बैली फैट और वजन घटाना (Belly Fat / Weight Loss)
+    if any(k in lower for k in ["बैली फैट", "belly fat", "चर्बी", "charbi", "पेट", "fat loss", "weight loss", "वजन कम", "मोटापा", "motapa"]):
+        reply = "सही डाइट और कार्डियो के साथ 2 से 3 महीने में शानदार बदलाव दिखने लगता है। आप कल आकर हमारे ट्रेनर से एक फ्री गाइडेंस ले सकते हैं।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 10. वर्कआउट से पहले और बाद का खाना (Pre & Post Workout Diet)
+    if any(k in lower for k in ["पहले और बाद", "pehle aur baad", "pre workout", "post workout", "वर्कआउट से पहले", "वर्कआउट के बाद", "क्या खाना", "क्या खाएं", "kya khana", "kya khaye"]):
+        reply = "वर्कआउट से पहले एक केला या हल्के कार्ब्स लें, और वर्कआउट के बाद प्रोटीन जैसे अंडे, पनीर या व्हे प्रोटीन रिकवरी के लिए सबसे बेस्ट हैं।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 11. डाइट प्लान और पोषण (Diet Plan & Nutrition)
+    if any(k in lower for k in ["डाइट प्लान", "diet plan", "डाइट चार्ट", "diet chart", "डाइट", "diet", "न्यूट्रिशन", "nutrition"]):
+        reply = "जी हाँ, हमारे ट्रेनर्स आपके वजन और फिटनेस गोल के हिसाब से कस्टमाइज्ड डाइट चार्ट भी बना कर देते हैं।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 12. महिलाओं की सुरक्षा और माहौल (Women Safety)
+    if any(k in lower for k in ["लड़कियों", "महिलाओं", "महिला", "ladies", "women", "female", "girls", "सेफ", "safe", "safety", "सुरक्षा", "सुरक्षित"]):
+        reply = "जी बिल्कुल! हमारे यहाँ महिलाओं के लिए पूरी तरह सुरक्षित और आरामदायक माहौल, फीमेल पर्सनल ट्रेनर्स और सेपरेट वॉशरूम/लॉकर की सुविधा है।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 13. कमर दर्द और इंजरी (Back Pain & Injury)
+    if any(k in lower for k in ["कमर दर्द", "back pain", "कमर", "दर्द", "pain", "इंजरी", "injury", "चोट", "घुटने"]):
+        reply = "हाँ, लेकिन आपको केवल हल्की और सही फॉर्म वाली एक्सरसाइज करनी चाहिए। हमारे अनुभवी ट्रेनर्स आपकी कमर का पूरा ध्यान रखकर ही वर्कआउट प्लान करेंगे।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 14. मौसम और बारिश (Weather & Rain)
+    if any(k in lower for k in ["मौसम", "weather", "बारिश", "rain", "mausam", "barish"]):
+        reply = "हाँ जी! एवेंजर्स फिटनेस क्लब का इनडोर एरिया पूरी तरह एयर-कंडीशंड है, आप बेफिक्र होकर अपने वर्कआउट के लिए आ सकते हैं।"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 15. धन्यवाद और आदर (Thank you)
+    if any(k in lower for k in ["thank you", "thanks", "thank", "धन्यवाद", "शुक्रिया", "थैंक यू", "dhanyawad", "shukriya"]):
+        reply = "यू आर मोस्ट वेलकम! एवेंजर्स फिटनेस क्लब में आपसे मिलकर बहुत अच्छा लगेगा। आपका दिन शुभ हो!"
+        return jsonify({"reply": reply, "show_pass_form": False})
+
+    # 16. अन्य सामान्य सवालों के लिए Groq AI
     api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
 
     if api_key:
