@@ -365,22 +365,23 @@ def chat():
                 "temperature": 0.7,
                 "max_tokens": 150
             }).encode("utf-8")
+                    req = urllib.request.Request(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        data=req_data,
+                        headers={
+                            "Content-Type": "application/json",
+                            "Authorization": f"Bearer {api_key}",
+                            "User-Agent": "Mozilla/5.0"
+                        }
+                    )
 
-            req = urllib.request.Request(
-                "https://api.groq.com/openai/v1/chat/completions",
-                data=req_data,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}"
-                }
-            )
-
-            with urllib.request.urlopen(req, timeout=8) as response:
+                    with urllib.request.urlopen(req, timeout=8) as response:
                 result = json.loads(response.read().decode("utf-8"))
                 reply = result["choices"][0]["message"]["content"].strip()
                 return jsonify({"reply": reply, "show_pass_form": False})
-        except Exception as e:
-            print(f"⚠️ Groq Note: {e}")
+                except Exception as e:
+                    print(f"⚠️ Groq Note: {e}")
+
 
     # सामान्य डिफ़ॉल्ट
     reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
