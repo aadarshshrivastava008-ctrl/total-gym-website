@@ -375,13 +375,12 @@ def chat():
                                 }
                             )
 
-            with urllib.request.urlopen(req, timeout=8) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                reply = result["choices"][0]["message"]["content"].strip()
-                return jsonify({"reply": reply, "show_pass_form": False})
+                            with urllib.request.urlopen(req, timeout=8) as response:
+                                 result = json.loads(response.read().decode("utf-8"))
+                                 reply = result["choices"][0]["message"]["content"].strip()
+                                 return jsonify({"reply": reply, "show_pass_form": False})
         except Exception as e:
             print(f"⚠️ Groq Note: {e}")
-
     # सामान्य डिफ़ॉल्ट
     reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
     return jsonify({"reply": reply, "show_pass_form": False})
