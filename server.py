@@ -348,8 +348,9 @@ def chat():
         reply = "हमारे पास 5,500 स्क्वायर फीट का विशाल स्पेस है, जिसमें सलमान खान की बीइंग स्ट्रांग ब्रांडेड मशीनें, क्रॉसफिट ज़ोन और स्टीम बाथ की पूरी सुविधा उपलब्ध है। आप एक बार आकर खुद देख सकते हैं।"
         return jsonify({"reply": reply, "show_pass_form": False})
 
-    # 8. अन्य सामान्य सवालों के लिए Groq AI
+# 8. अन्य सामान्य सवालों के लिए Groq AI
     api_key = (os.environ.get("GROQ_API_KEY") or os.environ.get("OPENAI_API_KEY", "")).strip()
+
     if api_key:
         try:
             system_instructions = (
@@ -365,22 +366,24 @@ def chat():
                 "temperature": 0.7,
                 "max_tokens": 150
             }).encode("utf-8")
-                req = urllib.request.Request(
-                                "https://api.groq.com/openai/v1/chat/completions",
-                                data=req_data,
-                                headers={
-                                    "Content-Type": "application/json",
-                                    "Authorization": f"Bearer {api_key}",
-                                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                                }
-                            )
 
-                            with urllib.request.urlopen(req, timeout=8) as response:
-                                 result = json.loads(response.read().decode("utf-8"))
-                                 reply = result["choices"][0]["message"]["content"].strip()
-                                 return jsonify({"reply": reply, "show_pass_form": False})
+            req = urllib.request.Request(
+                "https://api.groq.com/openai/v1/chat/completions",
+                data=req_data,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                }
+            )
+
+            with urllib.request.urlopen(req, timeout=8) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                reply = result["choices"][0]["message"]["content"].strip()
+                return jsonify({"reply": reply, "show_pass_form": False})
         except Exception as e:
             print(f"⚠️ Groq Note: {e}")
+
     # सामान्य डिफ़ॉल्ट
     reply = "नमस्ते! मैं एवेंजर्स फिटनेस क्लब से प्रिया बोल रही हूँ। आप मुझसे जिम की फीस, टाइमिंग, मशीनों या लोकेशन के बारे में पूछ सकते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?"
     return jsonify({"reply": reply, "show_pass_form": False})
