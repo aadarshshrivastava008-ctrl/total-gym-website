@@ -1,33 +1,39 @@
-# RudrAGym — Private Performance Club
+# 🏋️‍♂️ Avengers Fitness Club - 3D Gym & Web Platform
 
-A self-contained premium gym website. No install, no backend, no database.
+Welcome to the official GitHub repository of **Avengers Fitness Club**, a modern, immersive 3D fitness website and application built to deliver an interactive user experience.
 
-## How to open
+---
 
-**Option A — double-click**  
-Open `index.html` in Chrome, Edge, or Firefox.
+## 🚀 About the Project
+Avengers Fitness Club is designed to bridge the gap between traditional fitness websites and modern interactive web technologies. It provides visitors with an engaging 3D environment, smooth navigation, and a robust backend to handle user inquiries, memberships, and service bookings seamlessly. Also includes /admin-for owner to check all the clients payment and requests and /store-we also added a profession features like Amazon and flipkart for clients to order there required supliments and they can book order from the site itself.
 
-**Option B — local server (recommended for Three.js)**
+---
 
-```bash
-cd "c:\Users\Adarsh Shrivastava\OneDrive\Desktop\Gym project"
-python -m http.server 8080
-```
+## 🛠️ Tech Stack & Architecture
+* **Frontend:** HTML5, CSS3, JavaScript, Three.js / WebGL (for 3D interactive elements)
+* **Backend:** Python, Flask
+* **Database:** supabase & SQLite(for localsystem)
+* **Design & UI:** Responsive layouts, modern gym-themed styling, and dynamic components.
 
-Then visit [http://localhost:8080](http://localhost:8080).
+---
 
-Internet is required for Unsplash images, Google Fonts, and the Three.js CDN:
+## ✨ Key Features
+* **Interactive 3D Visuals:** Immersive 3D components powered by Three.js/WebGL to showcase the gym environment.
+* **Full-Stack Integration:** Powered by Python Flask and SQLite to securely capture and store user inquiries and form submissions.
+* **Responsive Design:** Fully optimized for desktops, tablets, and mobile devices.
+* **Modern UI/UX:** Sleek dark-themed interface tailored for fitness enthusiasts.
 
-`https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js`
+---
 
-## What’s included
-
-- Brand: **RudrAGym**, West Hollywood
-- Hero 3D rings + particles (Three.js), mouse parallax
-- Memberships: Studio $189 · Performance $279 · Maison $425
-- Class timetable, facilities, coaches, gallery, testimonials
-- Inquiry form (name, email, message) — on-page success only, no server
-
-## Scope
-
-Frontend only. Backend and email sending are not implemented yet.
+## 📂 Project Structure
+```text
+avengers-fitness-club/
+│
+├── static/              # CSS, JavaScript, and 3D assets/images
+├── templates/           # HTML templates (index, contact, services, etc.)
+├── server.py            # Main Python Flask backend server
+├── requirements.txt     # Python dependencies
+├── README.md            # Project Documentation
+├── index.html           # Frontend
+├── dumbbell.glb         # Used a very detailed dumbbell image.  
+└── plate.glb            # Use a very detailed plate image. 
